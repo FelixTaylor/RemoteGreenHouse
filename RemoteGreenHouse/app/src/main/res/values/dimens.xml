@@ -1,3 +1,4 @@
 <resources>
-    <dimen name="fab_margin">16dp</dimen>
+    <dimen name="default_activity_padding">16dp</dimen>
+    <dimen name="default_font_size">16dp</dimen>
 </resources>

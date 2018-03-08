@@ -41,6 +41,22 @@
         app:layout_constraintRight_toRightOf="parent" />
 
 
+    <!--
+
+    New ListView to display green house values
+
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <ListView android:id="@+id/list"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+    </ScrollView>-->
+
+
     <TableLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

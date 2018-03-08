@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">RemoteGreenHouse</string>
+    <string name="app_name">Remote Green House</string>
     <string name="action_settings">Settings</string>
 
     <string name="label_bluetooth">Bluetooth</string>
@@ -23,4 +23,12 @@
     <string name="dim_feuchtigkeit">%1$s g/m³</string>
     <string name="dim_helligkeit">%1$s lux</string>
     <string name="dim_temperatur">%1$s °C</string>
+
+    <array name="array_dimensions">
+        <item>%1$s Pa</item>
+        <item>%1$s g/m³</item>
+        <item>%1$s lux</item>
+        <item>%1$s %</item>
+    </array>
+
 </resources>

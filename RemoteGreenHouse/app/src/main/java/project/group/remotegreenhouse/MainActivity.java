@@ -12,7 +12,9 @@ import android.os.Message;
 import android.os.ParcelUuid;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.Layout;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Adapter;
 import android.widget.ArrayAdapter;
@@ -57,6 +59,7 @@ public class MainActivity extends AppCompatActivity {
     private String TAG = "MainActivity";
     private TextView twLEDlevel, twValTemperatur, twValDruck, twValHelligkeit, twValLuftfeuchte, twValBodenfeuchte;
     private Thread workerThread;
+
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -127,8 +130,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
-
-
 
     /*--------------------------
       -----Zusatzfunktionen-----
