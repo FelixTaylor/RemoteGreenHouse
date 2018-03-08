@@ -46,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
     private BluetoothDevice device;
     private BluetoothSocket bluetoothSocket;
     private volatile boolean stopWorker;
+    private boolean bIsInitialized;
     private Button btnConnect;
     private byte[] readBuffer;
     private int readBufferPosition, iLimiterPosition;
@@ -57,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
     private Set<BluetoothDevice> pairedDevices;
     private Switch swBluetooth;
     private String TAG = "MainActivity";
+    private String sValDruck, sValLichtlevel, sValTemperatur, sValLuftfeuchte, sValHelligkeit, sValBodenfeuchte;
     private TextView twLEDlevel, twValTemperatur, twValDruck, twValHelligkeit, twValLuftfeuchte, twValBodenfeuchte;
     private Thread workerThread;
 
@@ -84,6 +86,8 @@ public class MainActivity extends AppCompatActivity {
         sbLEDlevel.setMax(100);
         sbLEDlevel.setProgress(0);
         twLEDlevel.setText(Integer.toString(0));
+        sValLichtlevel = "";
+        bIsInitialized = false;
 
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         pairedDevices = bluetoothAdapter.getBondedDevices();
@@ -190,7 +194,7 @@ public class MainActivity extends AppCompatActivity {
                         } catch (IOException e) {Log.d(TAG,"Could not create Inputstream");
                         }
                         beginListenForData();
-                        serialWrite("a000");
+                        serialWrite("h");
                     }
                 } else {
                     Log.e("error", "Bluetooth is disabled.");
@@ -229,7 +233,7 @@ public class MainActivity extends AppCompatActivity {
         workerThread = new Thread(new Runnable(){
             public void run(){
                 while(!Thread.currentThread().isInterrupted() && !stopWorker){
-                    if(System.currentTimeMillis() - pastMillis > 5000){
+                    if(System.currentTimeMillis() - pastMillis > 50000){
                         serialWrite("h");
                         pastMillis = System.currentTimeMillis();
                     }
@@ -282,10 +286,23 @@ public class MainActivity extends AppCompatActivity {
                                                     );
                                                 }
                                                 if(data.substring(i,i+1).equals("t")){
+                                                    for(int j = i; j < data.length(); j++){
+                                                        if(data.substring(j,j+1).equals("g")){
+                                                            iLimiterPosition = j;
+                                                        }
+                                                    }
                                                     twValTemperatur.setText(
                                                             res.getString(R.string.dim_temperatur,
-                                                            data.substring(i+1,data.length()))
+                                                                    data.substring(i+1,iLimiterPosition))
                                                     );
+                                                }
+                                                if(data.substring(i,i+1).equals("g")){
+                                                    sValLichtlevel = data.substring(i+1,data.length()-1);
+                                                    Log.d(TAG,"licht: '" + sValLichtlevel + "'");
+                                                    if(!bIsInitialized){
+                                                        sbLEDlevel.setProgress(Integer.parseInt(sValLichtlevel));
+                                                        bIsInitialized = true;
+                                                    }
                                                 }
                                             }
                                         }
