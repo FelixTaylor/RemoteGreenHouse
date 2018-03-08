@@ -12,7 +12,7 @@
         android:id="@+id/sw_BluetoothONOFF"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/label_Bluetooth"
+        android:text="@string/label_bluetooth"
         android:theme="@style/SCBSwitch"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintRight_toRightOf="parent" />
@@ -21,7 +21,7 @@
         android:id="@+id/btn_Connect"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/label_Connect"/>
+        android:text="@string/btn_connect"/>
 
     <SeekBar
         android:id="@+id/sb_LEDlevel"
@@ -52,18 +52,13 @@
             <TextView
                 android:layout_column="1"
                 android:padding="3dip"
-                android:text="@string/label_Temperatur" />
+                android:text="@string/label_temperatur" />
 
             <TextView
                 android:id="@+id/val_Temperatur"
                 android:gravity="end"
                 android:padding="3dip"
-                android:text="@string/val_nan" />
-
-            <TextView
-                android:gravity="end"
-                android:padding="3dip"
-                android:text="@string/dim_Temperatur" />
+                android:text="@string/dim_temperatur" />
         </TableRow>
 
         <View
@@ -75,18 +70,13 @@
             <TextView
                 android:layout_column="1"
                 android:padding="3dip"
-                android:text="@string/label_Druck" />
+                android:text="@string/label_druck" />
 
             <TextView
                 android:id="@+id/val_Druck"
                 android:gravity="end"
                 android:padding="3dip"
-                android:text="@string/val_nan" />
-
-            <TextView
-                android:gravity="end"
-                android:padding="3dip"
-                android:text="@string/dim_Druck" />
+                android:text="@string/dim_druck" />
         </TableRow>
 
         <View
@@ -98,18 +88,13 @@
             <TextView
                 android:layout_column="1"
                 android:padding="3dip"
-                android:text="@string/label_Helligkeit" />
+                android:text="@string/label_helligkeit" />
 
             <TextView
                 android:id="@+id/val_Helligkeit"
                 android:gravity="end"
                 android:padding="3dip"
-                android:text="@string/val_nan" />
-
-            <TextView
-                android:gravity="end"
-                android:padding="3dip"
-                android:text="@string/dim_Helligkeit" />
+                android:text="@string/dim_helligkeit" />
         </TableRow>
 
         <View
@@ -121,18 +106,13 @@
             <TextView
                 android:layout_column="1"
                 android:padding="3dip"
-                android:text="@string/label_Luftfeuchte" />
+                android:text="@string/label_luftfeuchte" />
 
             <TextView
                 android:id="@+id/val_Luftfeuchte"
                 android:gravity="end"
                 android:padding="3dip"
-                android:text="@string/val_nan" />
-
-            <TextView
-                android:gravity="end"
-                android:padding="3dip"
-                android:text="@string/dim_Feuchtigkeit" />
+                android:text="@string/dim_feuchtigkeit" />
         </TableRow>
 
         <View
@@ -145,18 +125,13 @@
                 android:layout_height="41dp"
                 android:layout_column="1"
                 android:padding="3dip"
-                android:text="@string/label_Bodenfeuchte" />
+                android:text="@string/label_bodenfeuchte" />
 
             <TextView
                 android:id="@+id/val_Bodenfeuchte"
                 android:gravity="end"
                 android:padding="3dip"
-                android:text="@string/val_nan" />
-
-            <TextView
-                android:gravity="end"
-                android:padding="3dip"
-                android:text="@string/dim_Feuchtigkeit" />
+                android:text="@string/dim_feuchtigkeit" />
         </TableRow>
     </TableLayout>
 

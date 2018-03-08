@@ -6,6 +6,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.res.Resources;
 import android.os.Handler;
 import android.os.Message;
 import android.os.ParcelUuid;
@@ -37,6 +38,7 @@ import java.util.Date;
 import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
+    private Resources res;
 
     private BluetoothAdapter bluetoothAdapter;
     private BluetoothDevice device;
@@ -59,6 +61,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        res = getResources();
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
@@ -96,7 +99,7 @@ public class MainActivity extends AppCompatActivity {
                 if(b){
                     activateBluetooth();
                 }
-                else if(!b){
+                else {
                     deactivateBluetooth();
                 }
             }
@@ -119,7 +122,7 @@ public class MainActivity extends AppCompatActivity {
         btnConnect.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(getApplicationContext(),"Connecting...",Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(),res.getString(R.string.msg_bt_connecting),Toast.LENGTH_SHORT).show();
                 connectToPairedDevice();
             }
         });
@@ -136,6 +139,7 @@ public class MainActivity extends AppCompatActivity {
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
         }
         while(!bluetoothAdapter.isEnabled()){
+            //wait until bt is enabled
         }
         Toast.makeText(getApplicationContext(), "Bluetooth ON", Toast.LENGTH_SHORT).show();
     }
@@ -145,6 +149,7 @@ public class MainActivity extends AppCompatActivity {
             bluetoothAdapter.disable();
         }
         while(bluetoothAdapter.isEnabled()){
+            //wait until bt is disabled
         }
         Toast.makeText(getApplicationContext(), "Bluetooth OFF", Toast.LENGTH_SHORT).show();
     }
@@ -184,13 +189,13 @@ public class MainActivity extends AppCompatActivity {
                         } catch (IOException e) {Log.d(TAG,"Could not create Inputstream");
                         }
                         beginListenForData();
+                        serialWrite("a000");
                     }
                 } else {
                     Log.e("error", "Bluetooth is disabled.");
                 }
             }
         }
-        serialWrite("a000");
     }
 
     public void serialWrite(String s) {
@@ -203,12 +208,11 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
             if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
-                Toast.makeText(getApplicationContext(),"Connected",Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(),res.getString(R.string.msg_bt_connected),Toast.LENGTH_SHORT).show();
             }
             else{
-                Toast.makeText(getApplicationContext(),"Not Connected",Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(),res.getString(R.string.msg_bt_disconnected),Toast.LENGTH_SHORT).show();
             }
         }
     };
@@ -249,7 +253,10 @@ public class MainActivity extends AppCompatActivity {
                                                             iLimiterPosition = j;
                                                         }
                                                     }
-                                                    twValHelligkeit.setText(data.substring(i+1,iLimiterPosition));
+                                                    twValHelligkeit.setText(
+                                                            res.getString(R.string.dim_helligkeit,
+                                                            data.substring(i+1,iLimiterPosition))
+                                                    );
                                                 }
                                                 if(data.substring(i,i+1).equals("l")){
                                                     for(int j = i; j < data.length(); j++){
@@ -257,7 +264,10 @@ public class MainActivity extends AppCompatActivity {
                                                             iLimiterPosition = j;
                                                         }
                                                     }
-                                                    twValLuftfeuchte.setText(data.substring(i+1,iLimiterPosition));
+                                                    twValLuftfeuchte.setText(
+                                                            res.getString(R.string.dim_feuchtigkeit,
+                                                            data.substring(i+1,iLimiterPosition))
+                                                    );
                                                 }
                                                 if(data.substring(i,i+1).equals("p")){
                                                     for(int j = i; j < data.length(); j++){
@@ -265,10 +275,16 @@ public class MainActivity extends AppCompatActivity {
                                                             iLimiterPosition = j;
                                                         }
                                                     }
-                                                    twValDruck.setText(data.substring(i+1,iLimiterPosition));
+                                                    twValDruck.setText(
+                                                            res.getString(R.string.dim_druck,
+                                                            data.substring(i+1,iLimiterPosition))
+                                                    );
                                                 }
                                                 if(data.substring(i,i+1).equals("t")){
-                                                    twValTemperatur.setText(data.substring(i+1,data.length()));
+                                                    twValTemperatur.setText(
+                                                            res.getString(R.string.dim_temperatur,
+                                                            data.substring(i+1,data.length()))
+                                                    );
                                                 }
                                             }
                                         }

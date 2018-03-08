@@ -2,18 +2,25 @@
     <string name="app_name">RemoteGreenHouse</string>
     <string name="action_settings">Settings</string>
 
-    <string name="label_Bluetooth">Bluetooth</string>
-    <string name="label_Bodenfeuchte">Bodenfeuchte</string>
-    <string name="label_Connect">Connect</string>
-    <string name="label_Druck">Druck</string>
-    <string name="label_Helligkeit">Helligkeit</string>
-    <string name="label_Luftfeuchte">Luftfeuchtigkeit</string>
-    <string name="label_Temperatur">Temperatur</string>
+    <string name="label_bluetooth">Bluetooth</string>
+    <string name="label_bodenfeuchte">Bodenfeuchte</string>
+    <string name="label_druck">Druck</string>
+    <string name="label_helligkeit">Helligkeit</string>
+    <string name="label_luftfeuchte">Luftfeuchtigkeit</string>
+    <string name="label_temperatur">Temperatur</string>
+
+    <!--Buttons-->
+    <string name="btn_connect">Connect</string>
+
+    <!--Messages-->
+    <string name="msg_bt_connected">Connected</string>
+    <string name="msg_bt_disconnected">Not Connected</string>
+    <string name="msg_bt_connecting">Connecting &#8230;</string>
 
     <string name="val_nan">NAN</string>
 
-    <string name="dim_Druck"> Pa</string>
-    <string name="dim_Feuchtigkeit"> %</string>
-    <string name="dim_Helligkeit"> lux</string>
-    <string name="dim_Temperatur"> °C</string>
+    <string name="dim_druck">%1$s Pa</string>
+    <string name="dim_feuchtigkeit">%1$s g/m³</string>
+    <string name="dim_helligkeit">%1$s lux</string>
+    <string name="dim_temperatur">%1$s °C</string>
 </resources>
