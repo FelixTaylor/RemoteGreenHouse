@@ -3,11 +3,11 @@
     <string name="action_settings">Settings</string>
 
     <string name="label_bluetooth">Bluetooth</string>
-    <string name="label_bodenfeuchte">Bodenfeuchte</string>
-    <string name="label_druck">Druck</string>
-    <string name="label_helligkeit">Helligkeit</string>
-    <string name="label_luftfeuchte">Luftfeuchtigkeit</string>
-    <string name="label_temperatur">Temperatur</string>
+    <string name="label_terraHumidity">Bodenfeuchte</string>
+    <string name="label_pressure">Druck</string>
+    <string name="label_brightness">Helligkeit</string>
+    <string name="label_airHumidity">Luftfeuchtigkeit</string>
+    <string name="label_temperature">Temperatur</string>
 
     <!--Buttons-->
     <string name="btn_connect">Connect</string>
@@ -19,10 +19,11 @@
 
     <string name="val_nan">NAN</string>
 
-    <string name="dim_druck">%1$s Pa</string>
-    <string name="dim_feuchtigkeit">%1$s g/m³</string>
-    <string name="dim_helligkeit">%1$s lux</string>
-    <string name="dim_temperatur">%1$s °C</string>
+    <!--Physical Dimensions-->
+    <string name="dim_pressure">%1$s Pa</string>
+    <string name="dim_humidity">%1$s g/m³</string>
+    <string name="dim_brightness">%1$s lux</string>
+    <string name="dim_temperature">%1$s °C</string>
 
     <array name="array_dimensions">
         <item>%1$s Pa</item>

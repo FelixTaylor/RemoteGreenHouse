@@ -8,59 +8,44 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Resources;
 import android.os.Handler;
-import android.os.Message;
 import android.os.ParcelUuid;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.text.Layout;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.Adapter;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
-import android.widget.EditText;
-import android.widget.ListView;
 import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import org.w3c.dom.Text;
-
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
-    private Resources res;
-
-    private BluetoothAdapter bluetoothAdapter;
-    private BluetoothDevice device;
-    private BluetoothSocket bluetoothSocket;
-    private volatile boolean stopWorker;
-    private boolean bIsInitialized;
-    private Button btnConnect;
-    private byte[] readBuffer;
-    private int readBufferPosition, iLimiterPosition;
-    private static final int REQUEST_ENABLE_BT = 1;
-    private InputStream inputStream;
-    private long pastMillis;
-    private OutputStream outputStream;
-    private SeekBar sbLEDlevel;
-    private Set<BluetoothDevice> pairedDevices;
-    private Switch swBluetooth;
-    private String TAG = "MainActivity";
-    private String sValDruck, sValLichtlevel, sValTemperatur, sValLuftfeuchte, sValHelligkeit, sValBodenfeuchte;
-    private TextView twLEDlevel, twValTemperatur, twValDruck, twValHelligkeit, twValLuftfeuchte, twValBodenfeuchte;
-    private Thread workerThread;
+    private Resources res;                                  // Using resources directory
+    private BluetoothAdapter bluetoothAdapter;              // Local bluetooth adapter
+    private BluetoothDevice device;                         // Bluetooth device
+    private BluetoothSocket bluetoothSocket;                // Bluetooth communication Socket
+    private volatile boolean stopWorker;                    // Variable to stop the communication thread
+    private boolean b_isInitialized;                        // Set to true, if state got initialized data from arduino
+    private Button btn_bt_connect;                          // Button to connect to coupled bluetooth device
+    private byte[] readBuffer;                              // Serial Buffer
+    private int readBufferPosition;                         // Current pointer position for data reading
+    private int readLimiterPosition;                        // Current pointer position for searching limiter characters
+    private static final int REQUEST_ENABLE_BT = 1;         // Code for Enable_Request
+    private InputStream inputStream;                        // Bluetooth communication Inputsream
+    private long thread_pastMillis;                         // last send data time
+    private OutputStream outputStream;                      // Bluetooth communication Outputstream
+    private SeekBar sb_LEDLightControl;                     // SeekBar to control the LED Stripes
+    private Set<BluetoothDevice> pairedDevices;             // Set of paired bluetooth devices
+    private Switch sw_BluetoothState;                       // Switch to turn ON/OFF bluetooth
+    private String TAG = "MainActivity";                    // TAG for logging data
+    private String s_ValuePressure, s_ValueTemperature, s_ValueBrightness, s_ValueAirHumidity, s_ValueTerraHumidity, s_ValueLEDState;
+    private TextView tv_ValuePressure, tv_ValueTemperature, tv_ValueBrightness, tv_ValueAirHumidity, tv_ValueTerraHumidity, tv_ValueLEDState;
+    private Thread workerThread;                            // Thread for bluetooth data stream
 
 
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,53 +53,59 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         res = getResources();
 
+        // Prepare and set receiver for bluetooth actions
         IntentFilter filter = new IntentFilter();
         filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
         this.registerReceiver(mReceiver, filter);
 
-        sbLEDlevel          = findViewById(R.id.sb_LEDlevel);
-        twLEDlevel          = findViewById(R.id.tw_LEDlevel);
-        twValTemperatur     = findViewById(R.id.val_Temperatur);
-        twValDruck          = findViewById(R.id.val_Druck);
-        twValHelligkeit     = findViewById(R.id.val_Helligkeit);
-        twValLuftfeuchte    = findViewById(R.id.val_Luftfeuchte);
-        twValBodenfeuchte   = findViewById(R.id.val_Bodenfeuchte);
-        swBluetooth         = findViewById(R.id.sw_BluetoothONOFF);
-        btnConnect          = findViewById(R.id.btn_Connect);
+        // Connect local variable to layout objects
+        sb_LEDLightControl      = findViewById(R.id.sb_LEDState);
+        tv_ValueLEDState        = findViewById(R.id.tw_LEDState);
+        tv_ValueTemperature     = findViewById(R.id.val_temperature);
+        tv_ValuePressure        = findViewById(R.id.val_pressure);
+        tv_ValueBrightness      = findViewById(R.id.val_brightness);
+        tv_ValueAirHumidity     = findViewById(R.id.val_airHumidity);
+        tv_ValueTerraHumidity   = findViewById(R.id.val_terraHumidity);
+        sw_BluetoothState       = findViewById(R.id.sw_BluetoothONOFF);
+        btn_bt_connect          = findViewById(R.id.btn_Connect);
 
-        //Initial Conditions
-        sbLEDlevel.setMax(100);
-        sbLEDlevel.setProgress(0);
-        twLEDlevel.setText(Integer.toString(0));
-        sValLichtlevel = "";
-        bIsInitialized = false;
+        // Initialize Values
+        sb_LEDLightControl.setMax(100);
+        sb_LEDLightControl.setProgress(0);
+        tv_ValueLEDState.setText(Integer.toString(0));
+        s_ValueLEDState = "";
+        b_isInitialized = false;
 
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         pairedDevices = bluetoothAdapter.getBondedDevices();
 
+        // Check bluetooth adapters state for enable switch
         if(bluetoothAdapter.isEnabled()){
-            swBluetooth.setChecked(true);
+            sw_BluetoothState.setChecked(true);
         }
         else{
-            swBluetooth.setChecked(false);
+            sw_BluetoothState.setChecked(false);
         }
 
-        //Listener
-        swBluetooth.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+
+        /*------------------------
+        -------Set Listener-------
+        --------------------------*/
+        sw_BluetoothState.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                 if(b){
-                    activateBluetooth();
+                    enableBluetooth();
                 }
                 else {
-                    deactivateBluetooth();
+                    disableBluetooth();
                 }
             }
         });
-        sbLEDlevel.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+        sb_LEDLightControl.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-                twLEDlevel.setText(Integer.toString(sbLEDlevel.getProgress()));
+                tv_ValueLEDState.setText(Integer.toString(sb_LEDLightControl.getProgress()));
             }
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
@@ -122,11 +113,11 @@ public class MainActivity extends AppCompatActivity {
             }
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                String sendString = "a" + Integer.toString(sbLEDlevel.getProgress());
+                String sendString = "a" + Integer.toString(sb_LEDLightControl.getProgress());
                 serialWrite(sendString);
             }
         });
-        btnConnect.setOnClickListener(new View.OnClickListener() {
+        btn_bt_connect.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Toast.makeText(getApplicationContext(),res.getString(R.string.msg_bt_connecting),Toast.LENGTH_SHORT).show();
@@ -135,10 +126,11 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    /*--------------------------
-      -----Zusatzfunktionen-----
-      --------------------------*/
-    private void activateBluetooth(){
+    /*---------------------------
+      -----Additional Methods-----
+      ---------------------------*/
+    private void enableBluetooth(){
+        // enables bluetooth adapter if it is disabled
         if(!bluetoothAdapter.isEnabled()) {
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
@@ -149,7 +141,8 @@ public class MainActivity extends AppCompatActivity {
         Toast.makeText(getApplicationContext(), "Bluetooth ON", Toast.LENGTH_SHORT).show();
     }
 
-    private void deactivateBluetooth(){
+    private void disableBluetooth(){
+        // disables bluetooth adapter if it is enabled
         if(bluetoothAdapter.isEnabled()){
             bluetoothAdapter.disable();
         }
@@ -159,42 +152,35 @@ public class MainActivity extends AppCompatActivity {
         Toast.makeText(getApplicationContext(), "Bluetooth OFF", Toast.LENGTH_SHORT).show();
     }
 
-    private void makeDiscoverable() {
-        Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
-        discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
-        startActivity(discoverableIntent);
-        Log.i("Log", "Discoverable ");
-    }
-
     private void connectToPairedDevice(){
+        // connects bluetooth adapter to a paired bluetooth device
         if (bluetoothAdapter != null) {
             if (bluetoothAdapter.isEnabled()) {
-                Set<BluetoothDevice> bondedDevices = bluetoothAdapter.getBondedDevices();
-
+                Set<BluetoothDevice> bondedDevices = bluetoothAdapter.getBondedDevices();                       // get bonded devices
                 if (bondedDevices.size() > 0) {
                     for (BluetoothDevice mDevice : pairedDevices) {
-                        if (mDevice.getName().equals("HC-05")) {
+                        if (mDevice.getName().equals("HC-05")) {                                                // Looking for HC-05 device
                             device = mDevice;
                         }
                         ParcelUuid[] uuids = device.getUuids();
                         try {
-                            bluetoothSocket = device.createRfcommSocketToServiceRecord(uuids[0].getUuid());
+                            bluetoothSocket = device.createRfcommSocketToServiceRecord(uuids[0].getUuid());     // Create communication socket
                         } catch (IOException e) { Log.d(TAG,"Could not create Socket");
                         }
                         try {
-                            bluetoothSocket.connect();
+                            bluetoothSocket.connect();                                                          // Connect socket
                         } catch (IOException e) {Log.d(TAG,"Could not connect");
                         }
                         try {
-                            outputStream = bluetoothSocket.getOutputStream();
+                            outputStream = bluetoothSocket.getOutputStream();                                   // Create an output stream
                         } catch (IOException e) {Log.d(TAG,"Could not create Outputstream");
                         }
                         try {
-                            inputStream = bluetoothSocket.getInputStream();
+                            inputStream = bluetoothSocket.getInputStream();                                     // Create an input stream
                         } catch (IOException e) {Log.d(TAG,"Could not create Inputstream");
                         }
-                        beginListenForData();
-                        serialWrite("h");
+                        beginListenForData();                                                                   // Create a communication thread
+                        serialWrite("h");                                                                    // send initial data
                     }
                 } else {
                     Log.e("error", "Bluetooth is disabled.");
@@ -204,12 +190,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void serialWrite(String s) {
+        // writes the string s to the output stream
         try {
             outputStream.write(s.getBytes());
         }catch(IOException e){Log.i(TAG,"could not send String");}
     }
 
     private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
+        // receiver for bluetooth actions (connected, disconnected)
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
@@ -223,22 +211,27 @@ public class MainActivity extends AppCompatActivity {
     };
 
     void beginListenForData() {
+        // Thread for receiving bluetooth data from inputstream and data synchronization
         final Handler handler = new Handler();
-        final byte delimiter = 10; //This is the ASCII code for a newline character
-        pastMillis = System.currentTimeMillis();
+        final byte delimiter = 10;                                  // ASCII code for a newline character
+        thread_pastMillis = System.currentTimeMillis();             // sets current timer
 
+        // initialize thread variables
         stopWorker = false;
         readBufferPosition = 0;
         readBuffer = new byte[1024];
+        // create thread
         workerThread = new Thread(new Runnable(){
             public void run(){
                 while(!Thread.currentThread().isInterrupted() && !stopWorker){
-                    if(System.currentTimeMillis() - pastMillis > 50000){
+                    // synchronize sensor values every 5 seconds
+                    if(System.currentTimeMillis() - thread_pastMillis > 50000){
                         serialWrite("h");
-                        pastMillis = System.currentTimeMillis();
+                        thread_pastMillis = System.currentTimeMillis();
                     }
+                    // read from input stream
                     try{
-                        int bytesAvailable = inputStream.available();
+                        int bytesAvailable = inputStream.available();               // if there is something to read
                         if(bytesAvailable > 0){
                             byte[] packetBytes = new byte[bytesAvailable];
                             inputStream.read(packetBytes);
@@ -251,57 +244,58 @@ public class MainActivity extends AppCompatActivity {
                                     readBufferPosition = 0;
                                     handler.post(new Runnable(){
                                         public void run(){
+                                            // evaluate the incoming data string
                                             for(int i = 0; i<data.length(); i++){
                                                 if(data.substring(i,i+1).equals("h")){
                                                     for(int j = i; j < data.length(); j++){
                                                         if(data.substring(j,j+1).equals("l")){
-                                                            iLimiterPosition = j;
+                                                            readLimiterPosition = j;
                                                         }
                                                     }
-                                                    twValHelligkeit.setText(
-                                                            res.getString(R.string.dim_helligkeit,
-                                                            data.substring(i+1,iLimiterPosition))
+                                                    tv_ValueBrightness.setText(
+                                                            res.getString(R.string.dim_brightness,
+                                                            data.substring(i+1, readLimiterPosition))
                                                     );
                                                 }
                                                 if(data.substring(i,i+1).equals("l")){
                                                     for(int j = i; j < data.length(); j++){
                                                         if(data.substring(j,j+1).equals("p")){
-                                                            iLimiterPosition = j;
+                                                            readLimiterPosition = j;
                                                         }
                                                     }
-                                                    twValLuftfeuchte.setText(
-                                                            res.getString(R.string.dim_feuchtigkeit,
-                                                            data.substring(i+1,iLimiterPosition))
+                                                    tv_ValueAirHumidity.setText(
+                                                            res.getString(R.string.dim_humidity,
+                                                            data.substring(i+1, readLimiterPosition))
                                                     );
                                                 }
                                                 if(data.substring(i,i+1).equals("p")){
                                                     for(int j = i; j < data.length(); j++){
                                                         if(data.substring(j,j+1).equals("t")){
-                                                            iLimiterPosition = j;
+                                                            readLimiterPosition = j;
                                                         }
                                                     }
-                                                    twValDruck.setText(
-                                                            res.getString(R.string.dim_druck,
-                                                            data.substring(i+1,iLimiterPosition))
+                                                    tv_ValuePressure.setText(
+                                                            res.getString(R.string.dim_pressure,
+                                                            data.substring(i+1, readLimiterPosition))
                                                     );
                                                 }
                                                 if(data.substring(i,i+1).equals("t")){
                                                     for(int j = i; j < data.length(); j++){
                                                         if(data.substring(j,j+1).equals("g")){
-                                                            iLimiterPosition = j;
+                                                            readLimiterPosition = j;
                                                         }
                                                     }
-                                                    twValTemperatur.setText(
-                                                            res.getString(R.string.dim_temperatur,
-                                                                    data.substring(i+1,iLimiterPosition))
+                                                    tv_ValueTemperature.setText(
+                                                            res.getString(R.string.dim_temperature,
+                                                                    data.substring(i+1, readLimiterPosition))
                                                     );
                                                 }
                                                 if(data.substring(i,i+1).equals("g")){
-                                                    sValLichtlevel = data.substring(i+1,data.length()-1);
-                                                    Log.d(TAG,"licht: '" + sValLichtlevel + "'");
-                                                    if(!bIsInitialized){
-                                                        sbLEDlevel.setProgress(Integer.parseInt(sValLichtlevel));
-                                                        bIsInitialized = true;
+                                                    s_ValueLEDState = data.substring(i+1,data.length()-1);
+                                                    Log.d(TAG,"licht: '" + s_ValueLEDState + "'");
+                                                    if(!b_isInitialized){           // initialize the seekbar if it is the first call
+                                                        sb_LEDLightControl.setProgress(Integer.parseInt(s_ValueLEDState));
+                                                        b_isInitialized = true;
                                                     }
                                                 }
                                             }
