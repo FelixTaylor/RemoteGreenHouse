@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context="project.group.remotegreenhouse.MainActivity"
+    tools:showIn="@layout/activity_main">
+
+    <Switch
+        android:id="@+id/sw_BluetoothONOFF"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/label_Bluetooth"
+        android:theme="@style/SCBSwitch"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintRight_toRightOf="parent" />
+
+    <Button
+        android:id="@+id/btn_Connect"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/label_Connect"/>
+
+    <SeekBar
+        android:id="@+id/sb_LEDlevel"
+        android:layout_width="match_parent"
+        android:layout_height="10pt"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.5" />
+
+    <TextView
+        android:id="@+id/tw_LEDlevel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toTopOf="@+id/sb_LEDlevel"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent" />
+
+
+    <TableLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:stretchColumns="1"
+        app:layout_constraintTop_toBottomOf="@+id/sb_LEDlevel">
+
+        <TableRow>
+
+            <TextView
+                android:layout_column="1"
+                android:padding="3dip"
+                android:text="@string/label_Temperatur" />
+
+            <TextView
+                android:id="@+id/val_Temperatur"
+                android:gravity="end"
+                android:padding="3dip"
+                android:text="@string/val_nan" />
+
+            <TextView
+                android:gravity="end"
+                android:padding="3dip"
+                android:text="@string/dim_Temperatur" />
+        </TableRow>
+
+        <View
+            android:layout_height="2dip"
+            android:background="#FF909090" />
+
+        <TableRow>
+
+            <TextView
+                android:layout_column="1"
+                android:padding="3dip"
+                android:text="@string/label_Druck" />
+
+            <TextView
+                android:id="@+id/val_Druck"
+                android:gravity="end"
+                android:padding="3dip"
+                android:text="@string/val_nan" />
+
+            <TextView
+                android:gravity="end"
+                android:padding="3dip"
+                android:text="@string/dim_Druck" />
+        </TableRow>
+
+        <View
+            android:layout_height="2dip"
+            android:background="#FF909090" />
+
+        <TableRow>
+
+            <TextView
+                android:layout_column="1"
+                android:padding="3dip"
+                android:text="@string/label_Helligkeit" />
+
+            <TextView
+                android:id="@+id/val_Helligkeit"
+                android:gravity="end"
+                android:padding="3dip"
+                android:text="@string/val_nan" />
+
+            <TextView
+                android:gravity="end"
+                android:padding="3dip"
+                android:text="@string/dim_Helligkeit" />
+        </TableRow>
+
+        <View
+            android:layout_height="2dip"
+            android:background="#FF909090" />
+
+        <TableRow>
+
+            <TextView
+                android:layout_column="1"
+                android:padding="3dip"
+                android:text="@string/label_Luftfeuchte" />
+
+            <TextView
+                android:id="@+id/val_Luftfeuchte"
+                android:gravity="end"
+                android:padding="3dip"
+                android:text="@string/val_nan" />
+
+            <TextView
+                android:gravity="end"
+                android:padding="3dip"
+                android:text="@string/dim_Feuchtigkeit" />
+        </TableRow>
+
+        <View
+            android:layout_height="2dip"
+            android:background="#FF909090" />
+
+        <TableRow>
+
+            <TextView
+                android:layout_height="41dp"
+                android:layout_column="1"
+                android:padding="3dip"
+                android:text="@string/label_Bodenfeuchte" />
+
+            <TextView
+                android:id="@+id/val_Bodenfeuchte"
+                android:gravity="end"
+                android:padding="3dip"
+                android:text="@string/val_nan" />
+
+            <TextView
+                android:gravity="end"
+                android:padding="3dip"
+                android:text="@string/dim_Feuchtigkeit" />
+        </TableRow>
+    </TableLayout>
+
+
+
+
+</android.support.constraint.ConstraintLayout>
