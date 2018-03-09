@@ -58,16 +58,22 @@ public class MainActivity extends AppCompatActivity {
         filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
         this.registerReceiver(mReceiver, filter);
 
-        // Connect local variable to layout objects
         sb_LEDLightControl      = findViewById(R.id.sb_LEDState);
         tv_ValueLEDState        = findViewById(R.id.tw_LEDState);
+        sw_BluetoothState       = findViewById(R.id.sw_BluetoothONOFF);
+        btn_bt_connect          = findViewById(R.id.btn_Connect);
+
+        // TODO: Remove these textViews and ID's
+        // If we use the updateTable method to show the values
+        // we don't need these variables.
+
         tv_ValueTemperature     = findViewById(R.id.val_temperature);
         tv_ValuePressure        = findViewById(R.id.val_pressure);
         tv_ValueBrightness      = findViewById(R.id.val_brightness);
         tv_ValueAirHumidity     = findViewById(R.id.val_airHumidity);
         tv_ValueTerraHumidity   = findViewById(R.id.val_terraHumidity);
-        sw_BluetoothState       = findViewById(R.id.sw_BluetoothONOFF);
-        btn_bt_connect          = findViewById(R.id.btn_Connect);
+
+        // ----------------------------------------------------------------
 
         // Initialize Values
         sb_LEDLightControl.setMax(100);
@@ -82,8 +88,7 @@ public class MainActivity extends AppCompatActivity {
         // Check bluetooth adapters state for enable switch
         if(bluetoothAdapter.isEnabled()){
             sw_BluetoothState.setChecked(true);
-        }
-        else{
+        } else {
             sw_BluetoothState.setChecked(false);
         }
 
@@ -92,14 +97,13 @@ public class MainActivity extends AppCompatActivity {
         -------Set Listener-------
         --------------------------*/
         sw_BluetoothState.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                if(b){
+            @Override public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                /*if(b){
                     enableBluetooth();
-                }
-                else {
+                } else {
                     disableBluetooth();
-                }
+                }*/
+                toggleBluetooth(b);
             }
         });
         sb_LEDLightControl.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -118,18 +122,22 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         btn_bt_connect.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
+            @Override public void onClick(View view) {
                 Toast.makeText(getApplicationContext(),res.getString(R.string.msg_bt_connecting),Toast.LENGTH_SHORT).show();
                 connectToPairedDevice();
             }
         });
+
+        // I will change the table layout therefor we will need
+        // this method to reload the table and show the user the
+        // correct values.
+        updateTable();
     }
 
     /*---------------------------
       -----Additional Methods-----
       ---------------------------*/
-    private void enableBluetooth(){
+    /*private void enableBluetooth(){
         // enables bluetooth adapter if it is disabled
         if(!bluetoothAdapter.isEnabled()) {
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
@@ -139,9 +147,9 @@ public class MainActivity extends AppCompatActivity {
             //wait until bt is enabled
         }
         Toast.makeText(getApplicationContext(), "Bluetooth ON", Toast.LENGTH_SHORT).show();
-    }
+    }*/
 
-    private void disableBluetooth(){
+    /*private void disableBluetooth(){
         // disables bluetooth adapter if it is enabled
         if(bluetoothAdapter.isEnabled()){
             bluetoothAdapter.disable();
@@ -150,10 +158,42 @@ public class MainActivity extends AppCompatActivity {
             //wait until bt is disabled
         }
         Toast.makeText(getApplicationContext(), "Bluetooth OFF", Toast.LENGTH_SHORT).show();
+    }*/
+    private void toggleBluetooth(boolean b) {
+        String msg;
+        if(b){
+
+            if(!bluetoothAdapter.isEnabled()) {
+                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+            }
+            while(!bluetoothAdapter.isEnabled()){
+                //wait until bt is enabled
+            }
+            msg= "Bluetooth ON";
+
+        } else {
+
+            if(bluetoothAdapter.isEnabled()){
+                bluetoothAdapter.disable();
+            }
+            while(bluetoothAdapter.isEnabled()){
+                //wait until bt is disabled
+            }
+            msg= "Bluetooth OFF";
+
+        }
+
+        Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
     }
+
+
 
     private void connectToPairedDevice(){
         // connects bluetooth adapter to a paired bluetooth device
+        // I think we can write:
+        // if (bluetoothAdapter != null && bluetoothAdapter.isEnabled())
+        // at this position
         if (bluetoothAdapter != null) {
             if (bluetoothAdapter.isEnabled()) {
                 Set<BluetoothDevice> bondedDevices = bluetoothAdapter.getBondedDevices();                       // get bonded devices
@@ -316,6 +356,15 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        // I will change the table layout therefor we will need
+        // this method to reload the table and show the user the
+        // correct values.
+        updateTable();
         workerThread.start();
+    }
+    private void updateTable() {
+        // We will generate and update
+        // the table with te correct values
+        // here.
     }
 }
