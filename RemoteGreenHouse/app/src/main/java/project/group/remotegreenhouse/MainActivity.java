@@ -53,9 +53,9 @@ public class MainActivity extends AppCompatActivity {
     private LayoutInflater inflater;
     private TableLayout table;
 
-    // 0 temperature, 1 pressure, 2 brightness, 3 air humidity, 4 terra humidity,
+    // 0 temperature, 1 pressure, 2 brightness, 3 humidity, 4 moisture,
     private String tableIdentifiers[];
-    private String tableValues[];
+    private double tableValues[];
 
 
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Initialize Values
 
-        tableValues = new String[5];
+        tableValues = new double[5];
         tableIdentifiers = res.getStringArray(R.array.array_label_identifiers);
         inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
@@ -307,8 +307,12 @@ public class MainActivity extends AppCompatActivity {
                                                             readLimiterPosition = j;
                                                         }
                                                     }
-                                                    Log.d(TAG,"bright: '" + data.substring(i+1, readLimiterPosition) + "'");
-                                                    tableValues[2] = data.substring(i+1, readLimiterPosition);
+                                                    try{
+                                                        tableValues[2] = Double.valueOf(data.substring(i+1, readLimiterPosition));
+                                                    } catch(NumberFormatException ex){
+                                                        tableValues[2] = Double.NaN;
+                                                    }
+                                                    Log.d(TAG,"brightness: '" + tableValues[2] + "'");
                                                     /*
                                                     tableValues[2] = Double.valueOf(data.substring(i+1, readLimiterPosition));
                                                     tv_ValueBrightness.setText(
@@ -322,8 +326,12 @@ public class MainActivity extends AppCompatActivity {
                                                             readLimiterPosition = j;
                                                         }
                                                     }
-                                                    Log.d(TAG,"hum: '" + data.substring(i+1, readLimiterPosition) + "'");
-                                                    tableValues[3] = data.substring(i+1, readLimiterPosition);
+                                                    try{
+                                                        tableValues[3] = Double.valueOf(data.substring(i+1, readLimiterPosition));
+                                                    } catch(NumberFormatException ex){
+                                                        tableValues[3] = Double.NaN;
+                                                    }
+                                                    Log.d(TAG,"humidity: '" + tableValues[3] + "'");
                                                     /*
                                                     try {
                                                         tableValues[3] = Double.valueOf(data.substring(i + 1, readLimiterPosition));
@@ -341,9 +349,12 @@ public class MainActivity extends AppCompatActivity {
                                                             readLimiterPosition = j;
                                                         }
                                                     }
-
-                                                    Log.d(TAG,"p: '" + data.substring(i+1, readLimiterPosition) + "'");
-                                                    tableValues[0] = data.substring(i+1, readLimiterPosition);
+                                                    try{
+                                                        tableValues[1] = Double.valueOf(data.substring(i+1, readLimiterPosition));
+                                                    } catch(NumberFormatException ex){
+                                                        tableValues[1] = Double.NaN;
+                                                    }
+                                                    Log.d(TAG,"pressure: '" + tableValues[1] + "'");
                                                     /*
 
                                                     tableValues[0] = Double.valueOf(data.substring(i+1, readLimiterPosition));
@@ -358,9 +369,12 @@ public class MainActivity extends AppCompatActivity {
                                                             readLimiterPosition = j;
                                                         }
                                                     }
-
-                                                    Log.d(TAG,"t: '" + data.substring(i+1, readLimiterPosition) + "'");
-                                                    tableValues[1] = data.substring(i+1, readLimiterPosition);
+                                                    try{
+                                                        tableValues[0] = Double.valueOf(data.substring(i+1, readLimiterPosition));
+                                                    } catch(NumberFormatException ex){
+                                                        tableValues[0] = Double.NaN;
+                                                    }
+                                                    Log.d(TAG,"temperature: '" + tableValues[0] + "'");
                                                     /*
                                                     tableValues[1] = Double.valueOf(data.substring(i+1, readLimiterPosition));
                                                     /*tv_ValueTemperature.setText(
@@ -370,7 +384,7 @@ public class MainActivity extends AppCompatActivity {
                                                 }
                                                 if(data.substring(i,i+1).equals("g")){
                                                     s_ValueLEDState = data.substring(i+1,data.length()-1);
-                                                    Log.d(TAG,"licht: '" + s_ValueLEDState + "'");
+                                                    Log.d(TAG,"LED_Level: '" + s_ValueLEDState + "'");
                                                     if(!b_isInitialized){           // initialize the seekbar if it is the first call
                                                         sb_LEDLightControl.setProgress(Integer.parseInt(s_ValueLEDState));
                                                         b_isInitialized = true;
@@ -407,11 +421,11 @@ public class MainActivity extends AppCompatActivity {
 
         table.removeAllViews();
         String valueInputs[] = new String[]{
-                res.getString(R.string.dim_temperature, tableValues[0]),
-                res.getString(R.string.dim_humidity, tableValues[1]),
-                res.getString(R.string.dim_brightness, tableValues[2]),
-                res.getString(R.string.dim_pressure, tableValues[3]),
-                res.getString(R.string.dim_humidity, tableValues[4]),
+                res.getString(R.string.dim_temperature, String.valueOf(tableValues[0])),
+                res.getString(R.string.dim_pressure, String.valueOf(tableValues[1])),
+                res.getString(R.string.dim_brightness, String.valueOf(tableValues[2])),
+                res.getString(R.string.dim_humidity, String.valueOf(tableValues[3])),
+                res.getString(R.string.dim_humidity, String.valueOf(tableValues[4])),
         };
 
 
