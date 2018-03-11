@@ -203,8 +203,6 @@ public class MainActivity extends AppCompatActivity {
         Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
     }
 
-
-
     private void connectToPairedDevice(){
         // connects bluetooth adapter to a paired bluetooth device
         // I think we can write:
@@ -391,6 +389,7 @@ public class MainActivity extends AppCompatActivity {
                                                     }
                                                 }
                                             }
+                                            updateTable();
                                         }
                                     });
                                 }
@@ -411,9 +410,9 @@ public class MainActivity extends AppCompatActivity {
         // I will change the table layout therefor we will need
         // this method to reload the table and show the user the
         // correct tableValues.
-        updateTable();
         workerThread.start();
     }
+
     private void updateTable() {
         // We will generate and update
         // the table with te correct tableValues
@@ -442,6 +441,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
+
     public void action_button(View v) {
         Toast.makeText(getApplicationContext(),res.getString(R.string.msg_bt_connecting),Toast.LENGTH_SHORT).show();
         connectToPairedDevice();
