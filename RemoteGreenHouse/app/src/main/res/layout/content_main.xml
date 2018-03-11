@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools" style="@style/Container"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context="project.group.remotegreenhouse.MainActivity"
-    tools:showIn="@layout/activity_main" >
+    tools:showIn="@layout/activity_main" android:background="@color/colorActivityBackground">
 
     <LinearLayout style="@style/Container.Horizontal">
 
@@ -27,17 +27,13 @@
 
     New ListView to display green house values
 
+-->
 
-    <ScrollView
+    <TableLayout android:id="@+id/table"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="wrap_content" />
 
-        <ListView android:id="@+id/list"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-
-    </ScrollView>-->
-
+<!--
 
     <TableLayout android:layout_width="match_parent" android:layout_height="wrap_content"
         android:stretchColumns="1" app:layout_constraintTop_toBottomOf="@+id/sb_LEDState">
@@ -81,4 +77,5 @@
                 android:padding="3dip" android:text="@string/dim_humidity" />
         </TableRow>
     </TableLayout>
+    -->
 </LinearLayout>

@@ -12,11 +12,13 @@ import android.os.ParcelUuid;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.SeekBar;
 import android.widget.Switch;
+import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import java.io.IOException;
@@ -25,6 +27,8 @@ import java.io.OutputStream;
 import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
+    private static final String TAG = MainActivity.class.getSimpleName(); // TAG for logging data
+    private static final int REQUEST_ENABLE_BT = 1;         // Code for Enable_Request
     private Resources res;                                  // Using resources directory
     private BluetoothAdapter bluetoothAdapter;              // Local bluetooth adapter
     private BluetoothDevice device;                         // Bluetooth device
@@ -35,17 +39,23 @@ public class MainActivity extends AppCompatActivity {
     private byte[] readBuffer;                              // Serial Buffer
     private int readBufferPosition;                         // Current pointer position for data reading
     private int readLimiterPosition;                        // Current pointer position for searching limiter characters
-    private static final int REQUEST_ENABLE_BT = 1;         // Code for Enable_Request
+
     private InputStream inputStream;                        // Bluetooth communication Inputsream
     private long thread_pastMillis;                         // last send data time
     private OutputStream outputStream;                      // Bluetooth communication Outputstream
     private SeekBar sb_LEDLightControl;                     // SeekBar to control the LED Stripes
     private Set<BluetoothDevice> pairedDevices;             // Set of paired bluetooth devices
     private Switch sw_BluetoothState;                       // Switch to turn ON/OFF bluetooth
-    private String TAG = "MainActivity";                    // TAG for logging data
     private String s_ValuePressure, s_ValueTemperature, s_ValueBrightness, s_ValueAirHumidity, s_ValueTerraHumidity, s_ValueLEDState;
     private TextView tv_ValuePressure, tv_ValueTemperature, tv_ValueBrightness, tv_ValueAirHumidity, tv_ValueTerraHumidity, tv_ValueLEDState;
     private Thread workerThread;                            // Thread for bluetooth data stream
+
+    private LayoutInflater inflater;
+    private TableLayout table;
+
+    // 0 temperature, 1 pressure, 2 brightness, 3 air humidity, 4 terra humidity,
+    private String tableIdentifiers[];
+    private double tableValues[];
 
 
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,24 +68,30 @@ public class MainActivity extends AppCompatActivity {
         filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
         this.registerReceiver(mReceiver, filter);
 
-        sb_LEDLightControl      = findViewById(R.id.sb_LEDState);
-        tv_ValueLEDState        = findViewById(R.id.tw_LEDState);
-        sw_BluetoothState       = findViewById(R.id.sw_BluetoothONOFF);
-        btn_bt_connect          = findViewById(R.id.btn_Connect);
+        sb_LEDLightControl = findViewById(R.id.sb_LEDState);
+        tv_ValueLEDState   = findViewById(R.id.tw_LEDState);
+        sw_BluetoothState  = findViewById(R.id.sw_BluetoothONOFF);
+        btn_bt_connect     = findViewById(R.id.btn_Connect);
+        table              = findViewById(R.id.table);
 
         // TODO: Remove these textViews and ID's
-        // If we use the updateTable method to show the values
+        // If we use the updateTable method to show the tableValues
         // we don't need these variables.
 
-        tv_ValueTemperature     = findViewById(R.id.val_temperature);
+       /* tv_ValueTemperature     = findViewById(R.id.val_temperature);
         tv_ValuePressure        = findViewById(R.id.val_pressure);
         tv_ValueBrightness      = findViewById(R.id.val_brightness);
         tv_ValueAirHumidity     = findViewById(R.id.val_airHumidity);
         tv_ValueTerraHumidity   = findViewById(R.id.val_terraHumidity);
-
+*/
         // ----------------------------------------------------------------
 
         // Initialize Values
+
+        tableValues = new double[5];
+        tableIdentifiers = res.getStringArray(R.array.array_label_identifiers);
+        inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
         sb_LEDLightControl.setMax(100);
         sb_LEDLightControl.setProgress(0);
         tv_ValueLEDState.setText(Integer.toString(0));
@@ -130,7 +146,7 @@ public class MainActivity extends AppCompatActivity {
 
         // I will change the table layout therefor we will need
         // this method to reload the table and show the user the
-        // correct values.
+        // correct tableValues.
         updateTable();
     }
 
@@ -243,8 +259,7 @@ public class MainActivity extends AppCompatActivity {
             String action = intent.getAction();
             if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
                 Toast.makeText(getApplicationContext(),res.getString(R.string.msg_bt_connected),Toast.LENGTH_SHORT).show();
-            }
-            else{
+            } else{
                 Toast.makeText(getApplicationContext(),res.getString(R.string.msg_bt_disconnected),Toast.LENGTH_SHORT).show();
             }
         }
@@ -264,7 +279,7 @@ public class MainActivity extends AppCompatActivity {
         workerThread = new Thread(new Runnable(){
             public void run(){
                 while(!Thread.currentThread().isInterrupted() && !stopWorker){
-                    // synchronize sensor values every 5 seconds
+                    // synchronize sensor tableValues every 5 seconds
                     if(System.currentTimeMillis() - thread_pastMillis > 50000){
                         serialWrite("h");
                         thread_pastMillis = System.currentTimeMillis();
@@ -292,10 +307,12 @@ public class MainActivity extends AppCompatActivity {
                                                             readLimiterPosition = j;
                                                         }
                                                     }
-                                                    tv_ValueBrightness.setText(
+
+                                                    tableValues[2] = Double.valueOf(data.substring(i+1, readLimiterPosition));
+                                                    /*tv_ValueBrightness.setText(
                                                             res.getString(R.string.dim_brightness,
                                                             data.substring(i+1, readLimiterPosition))
-                                                    );
+                                                    );*/
                                                 }
                                                 if(data.substring(i,i+1).equals("l")){
                                                     for(int j = i; j < data.length(); j++){
@@ -303,10 +320,12 @@ public class MainActivity extends AppCompatActivity {
                                                             readLimiterPosition = j;
                                                         }
                                                     }
-                                                    tv_ValueAirHumidity.setText(
+
+                                                    tableValues[3] = Double.valueOf(data.substring(i+1, readLimiterPosition));
+                                                    /*tv_ValueAirHumidity.setText(
                                                             res.getString(R.string.dim_humidity,
                                                             data.substring(i+1, readLimiterPosition))
-                                                    );
+                                                    );*/
                                                 }
                                                 if(data.substring(i,i+1).equals("p")){
                                                     for(int j = i; j < data.length(); j++){
@@ -314,10 +333,12 @@ public class MainActivity extends AppCompatActivity {
                                                             readLimiterPosition = j;
                                                         }
                                                     }
-                                                    tv_ValuePressure.setText(
+
+                                                    tableValues[0] = Double.valueOf(data.substring(i+1, readLimiterPosition));
+                                                    /*tv_ValuePressure.setText(
                                                             res.getString(R.string.dim_pressure,
                                                             data.substring(i+1, readLimiterPosition))
-                                                    );
+                                                    );*/
                                                 }
                                                 if(data.substring(i,i+1).equals("t")){
                                                     for(int j = i; j < data.length(); j++){
@@ -325,10 +346,12 @@ public class MainActivity extends AppCompatActivity {
                                                             readLimiterPosition = j;
                                                         }
                                                     }
-                                                    tv_ValueTemperature.setText(
+
+                                                    tableValues[1] = Double.valueOf(data.substring(i+1, readLimiterPosition));
+                                                    /*tv_ValueTemperature.setText(
                                                             res.getString(R.string.dim_temperature,
-                                                                    data.substring(i+1, readLimiterPosition))
-                                                    );
+                                                            data.substring(i+1, readLimiterPosition))
+                                                    );*/
                                                 }
                                                 if(data.substring(i,i+1).equals("g")){
                                                     s_ValueLEDState = data.substring(i+1,data.length()-1);
@@ -358,13 +381,40 @@ public class MainActivity extends AppCompatActivity {
 
         // I will change the table layout therefor we will need
         // this method to reload the table and show the user the
-        // correct values.
+        // correct tableValues.
         updateTable();
         workerThread.start();
     }
     private void updateTable() {
         // We will generate and update
-        // the table with te correct values
+        // the table with te correct tableValues
         // here.
+
+        table.removeAllViews();
+        String valueInputs[] = new String[]{
+                res.getString(R.string.dim_temperature, Double.toString(tableValues[0])),
+                res.getString(R.string.dim_humidity, Double.toString(tableValues[1])),
+                res.getString(R.string.dim_brightness, Double.toString(tableValues[2])),
+                res.getString(R.string.dim_pressure, Double.toString(tableValues[3])),
+                res.getString(R.string.dim_humidity, Double.toString(tableValues[4])),
+        };
+
+
+        for (int i = 0; i< tableValues.length; i++) {
+            View row = inflater.inflate(R.layout.item_row_main_activity, null);
+            TextView identifier = row.findViewById(R.id.row_identifier);
+            TextView value = row.findViewById(R.id.row_value);
+
+            identifier.setText(tableIdentifiers[i]);
+            value.setText(valueInputs[i]);
+
+            if (i%2 == 0) {row.setBackgroundColor(res.getColor(R.color.colorTableLight));}
+            table.addView(row);
+        }
+
+    }
+    public void action_button(View v) {
+        Toast.makeText(getApplicationContext(),res.getString(R.string.msg_bt_connecting),Toast.LENGTH_SHORT).show();
+        connectToPairedDevice();
     }
 }
