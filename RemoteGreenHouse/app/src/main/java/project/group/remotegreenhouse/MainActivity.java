@@ -99,7 +99,6 @@ public class MainActivity extends AppCompatActivity {
         b_isInitialized = false;
 
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        pairedDevices = bluetoothAdapter.getBondedDevices();
 
         // Check bluetooth adapters state for enable switch
         if(bluetoothAdapter.isEnabled()){
@@ -209,6 +208,7 @@ public class MainActivity extends AppCompatActivity {
         // if (bluetoothAdapter != null && bluetoothAdapter.isEnabled())
         // at this position
         if (bluetoothAdapter != null) {
+            pairedDevices = bluetoothAdapter.getBondedDevices();
             if (bluetoothAdapter.isEnabled()) {
                 Set<BluetoothDevice> bondedDevices = bluetoothAdapter.getBondedDevices();                       // get bonded devices
                 if (bondedDevices.size() > 0) {
