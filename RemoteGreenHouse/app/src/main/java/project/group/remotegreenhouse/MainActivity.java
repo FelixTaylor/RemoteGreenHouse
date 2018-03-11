@@ -55,7 +55,7 @@ public class MainActivity extends AppCompatActivity {
 
     // 0 temperature, 1 pressure, 2 brightness, 3 air humidity, 4 terra humidity,
     private String tableIdentifiers[];
-    private double tableValues[];
+    private String tableValues[];
 
 
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Initialize Values
 
-        tableValues = new double[5];
+        tableValues = new String[5];
         tableIdentifiers = res.getStringArray(R.array.array_label_identifiers);
         inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
@@ -280,7 +280,7 @@ public class MainActivity extends AppCompatActivity {
             public void run(){
                 while(!Thread.currentThread().isInterrupted() && !stopWorker){
                     // synchronize sensor tableValues every 5 seconds
-                    if(System.currentTimeMillis() - thread_pastMillis > 50000){
+                    if(System.currentTimeMillis() - thread_pastMillis > 5000){
                         serialWrite("h");
                         thread_pastMillis = System.currentTimeMillis();
                     }
@@ -307,9 +307,11 @@ public class MainActivity extends AppCompatActivity {
                                                             readLimiterPosition = j;
                                                         }
                                                     }
-
+                                                    Log.d(TAG,"bright: '" + data.substring(i+1, readLimiterPosition) + "'");
+                                                    tableValues[2] = data.substring(i+1, readLimiterPosition);
+                                                    /*
                                                     tableValues[2] = Double.valueOf(data.substring(i+1, readLimiterPosition));
-                                                    /*tv_ValueBrightness.setText(
+                                                    tv_ValueBrightness.setText(
                                                             res.getString(R.string.dim_brightness,
                                                             data.substring(i+1, readLimiterPosition))
                                                     );*/
@@ -320,9 +322,15 @@ public class MainActivity extends AppCompatActivity {
                                                             readLimiterPosition = j;
                                                         }
                                                     }
-
-                                                    tableValues[3] = Double.valueOf(data.substring(i+1, readLimiterPosition));
-                                                    /*tv_ValueAirHumidity.setText(
+                                                    Log.d(TAG,"hum: '" + data.substring(i+1, readLimiterPosition) + "'");
+                                                    tableValues[3] = data.substring(i+1, readLimiterPosition);
+                                                    /*
+                                                    try {
+                                                        tableValues[3] = Double.valueOf(data.substring(i + 1, readLimiterPosition));
+                                                    }catch(NumberFormatException ex) {
+                                                        tableValues[3] = 0.0;
+                                                    }
+                                                    tv_ValueAirHumidity.setText(
                                                             res.getString(R.string.dim_humidity,
                                                             data.substring(i+1, readLimiterPosition))
                                                     );*/
@@ -334,8 +342,12 @@ public class MainActivity extends AppCompatActivity {
                                                         }
                                                     }
 
+                                                    Log.d(TAG,"p: '" + data.substring(i+1, readLimiterPosition) + "'");
+                                                    tableValues[0] = data.substring(i+1, readLimiterPosition);
+                                                    /*
+
                                                     tableValues[0] = Double.valueOf(data.substring(i+1, readLimiterPosition));
-                                                    /*tv_ValuePressure.setText(
+                                                    tv_ValuePressure.setText(
                                                             res.getString(R.string.dim_pressure,
                                                             data.substring(i+1, readLimiterPosition))
                                                     );*/
@@ -347,6 +359,9 @@ public class MainActivity extends AppCompatActivity {
                                                         }
                                                     }
 
+                                                    Log.d(TAG,"t: '" + data.substring(i+1, readLimiterPosition) + "'");
+                                                    tableValues[1] = data.substring(i+1, readLimiterPosition);
+                                                    /*
                                                     tableValues[1] = Double.valueOf(data.substring(i+1, readLimiterPosition));
                                                     /*tv_ValueTemperature.setText(
                                                             res.getString(R.string.dim_temperature,
@@ -392,11 +407,11 @@ public class MainActivity extends AppCompatActivity {
 
         table.removeAllViews();
         String valueInputs[] = new String[]{
-                res.getString(R.string.dim_temperature, Double.toString(tableValues[0])),
-                res.getString(R.string.dim_humidity, Double.toString(tableValues[1])),
-                res.getString(R.string.dim_brightness, Double.toString(tableValues[2])),
-                res.getString(R.string.dim_pressure, Double.toString(tableValues[3])),
-                res.getString(R.string.dim_humidity, Double.toString(tableValues[4])),
+                res.getString(R.string.dim_temperature, tableValues[0]),
+                res.getString(R.string.dim_humidity, tableValues[1]),
+                res.getString(R.string.dim_brightness, tableValues[2]),
+                res.getString(R.string.dim_pressure, tableValues[3]),
+                res.getString(R.string.dim_humidity, tableValues[4]),
         };
 
 
