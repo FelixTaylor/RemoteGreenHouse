@@ -191,6 +191,7 @@ public class MainActivity extends AppCompatActivity {
         } else {
 
             if(bluetoothAdapter.isEnabled()){
+                stopListenForData();
                 bluetoothAdapter.disable();
             }
             while(bluetoothAdapter.isEnabled()){
@@ -264,6 +265,20 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    void stopListenForData(){
+        stopWorker = true;
+        b_isInitialized = false;
+        //reset readBuffer
+        readBufferPosition = 0;
+        //reset tableValues and SeekBar
+        sb_LEDLightControl.setProgress(0);
+        tableValues[0] = 0.0;
+        tableValues[1] = 0.0;
+        tableValues[2] = 0.0;
+        tableValues[3] = 0.0;
+        updateTable();
+    }
+
     void beginListenForData() {
         // Thread for receiving bluetooth data from inputstream and data synchronization
         final Handler handler = new Handler();
@@ -299,6 +314,7 @@ public class MainActivity extends AppCompatActivity {
                                     handler.post(new Runnable(){
                                         public void run(){
                                             // evaluate the incoming data string
+                                            Log.d(TAG,"Data: '" + data + "'");
                                             for(int i = 0; i<data.length(); i++){
                                                 if(data.substring(i,i+1).equals("t")){
                                                     for(int j = i; j < data.length(); j++){
@@ -314,7 +330,7 @@ public class MainActivity extends AppCompatActivity {
                                                         //tableValues[0] = Double.NaN;
                                                     }
                                                     //tableValues[0] = val_temperature;
-                                                    Log.d(TAG,"temperature: '" + tableValues[0] + "'");
+                                                    //Log.d(TAG,"temperature: '" + tableValues[0] + "'");
                                                     /*
                                                     tableValues[1] = Double.valueOf(data.substring(i+1, readLimiterPosition));
                                                     /*tv_ValueTemperature.setText(
@@ -338,7 +354,7 @@ public class MainActivity extends AppCompatActivity {
                                                         //tableValues[1] = Double.NaN;
                                                     }
                                                     //tableValues[1] =val_pressure;
-                                                    Log.d(TAG,"pressure: '" + tableValues[1] + "'");
+                                                    //Log.d(TAG,"pressure: '" + tableValues[1] + "'");
                                                     /*
 
                                                     tableValues[0] = Double.valueOf(data.substring(i+1, readLimiterPosition));
@@ -361,7 +377,7 @@ public class MainActivity extends AppCompatActivity {
                                                         val_brightness = Double.NaN;
                                                     }
                                                     //tableValues[2] = val_brightness;
-                                                    Log.d(TAG,"brightness: '" + val_brightness + "'");
+                                                    //Log.d(TAG,"brightness: '" + val_brightness + "'");
                                                     /*
                                                     tableValues[2] = Double.valueOf(data.substring(i+1, readLimiterPosition));
                                                     tv_ValueBrightness.setText(
@@ -383,7 +399,7 @@ public class MainActivity extends AppCompatActivity {
                                                         //tableValues[3] = Double.NaN;
                                                     }
                                                     //tableValues[3] = val_humidity;
-                                                    Log.d(TAG,"humidity: '" + tableValues[3] + "'");
+                                                    //Log.d(TAG,"humidity: '" + tableValues[3] + "'");
                                                     /*
                                                     try {
                                                         tableValues[3] = Double.valueOf(data.substring(i + 1, readLimiterPosition));
@@ -402,13 +418,17 @@ public class MainActivity extends AppCompatActivity {
                                                         val_LED_state = Double.NaN;
                                                     }
                                                     //s_ValueLEDState = data.substring(i+1,data.length()-1);
-                                                    Log.d(TAG,"LED_Level: '" + val_LED_state + "'");
+                                                    //Log.d(TAG,"LED_Level: '" + val_LED_state + "'");
                                                     if(!b_isInitialized){           // initialize the seekbar if this is the first call
                                                         sb_LEDLightControl.setProgress((int) val_LED_state);
                                                         b_isInitialized = true;
                                                     }
                                                 }
                                             }
+                                            tableValues[0] = val_temperature;
+                                            tableValues[1] = val_pressure;
+                                            tableValues[2] = val_brightness;
+                                            tableValues[3] = val_humidity;
                                             updateTable();
                                         }
                                     });
@@ -437,11 +457,6 @@ public class MainActivity extends AppCompatActivity {
         // We will generate and update
         // the table with te correct tableValues
         // here.
-
-        tableValues[0] = val_temperature;
-        tableValues[1] = val_pressure;
-        tableValues[2] = val_brightness;
-        tableValues[3] = val_humidity;
 
         table.removeAllViews();
         String valueInputs[] = new String[]{
