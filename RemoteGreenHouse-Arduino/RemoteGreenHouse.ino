@@ -1,6 +1,6 @@
 #include <SPI.h>
 #include <Wire.h>
-#include <BMP180.h>
+#include <Adafruit_BMP085.h>
 #include <DHT.h>
 #include <Adafruit_SSD1306.h>
 #include <BH1750FVI.h>
@@ -17,8 +17,8 @@
 
 // function declaration
 void setLEDlevel(int val);
-long getPressure();
-float getTemperature();
+int getPressure();
+double getTemperature();
 float getHumidity();
 uint16_t getLightIntensity();
 String readComPort();
@@ -31,9 +31,9 @@ void displayPressBright();
 void displayTempHum();
 
 // object setup
-BMP180 barometer;                           //Barometer BMP180
+Adafruit_BMP085 barometer;                  //Barometer BMP180
 Adafruit_SSD1306 display(4);                //Display 
-DHT dht_air(DHT22, dht_air_pin);           //DHT22 Luftsensor an Pin D5
+DHT dht_air(DHT22, dht_air_pin);            //DHT22 Luftsensor an Pin D5
 DHT dht_terra(DHT22, dht_terra_pin);        //DHT22 Bodensensor an Pin D4
 BH1750FVI lightSensor;                      //Lichtesensorobjekt
 
@@ -44,9 +44,9 @@ unsigned long delayMillis;
 
 boolean b_LED_state;        // State of the LED Stripes       (True: ON, False: OFF)
 int     i_LED_level;        // brightness of the LED Stripes  (0% - 100%)
-long    val_pressure;       // pressure value                 [Pa]
+int     val_pressure;       // pressure value                 [Pa]
 long    val_brightness;     // brightness value               [lux]
-float   val_temperature;    // temperature value              [°C]
+double  val_temperature;    // temperature value              [°C]
 float   val_humidity;       // humidity value                 [%]
 float   val_moisture;       // moisture value                 [%]
 String  readString;         // read data of the serial input
@@ -72,11 +72,11 @@ void setup() {
    * --------------------
    */
   //Barometer Setup()
-  barometer = BMP180();
-  if(barometer.EnsureConnected()){
-    barometer.SoftReset();
-    barometer.Initialize();
+  if (!barometer.begin()) {
+  Serial.println("Could not find a valid BMP085 sensor, check wiring!");
+  while (1) {}
   }
+  
   //lightSensor Setup()
   lightSensor.SetMode(Continuous_H_resolution_Mode);
   //Display Setup()
@@ -111,6 +111,7 @@ void loop() {
     int iType = readString[0];
     if(iType == 97){                              // Empfangsdaten: a (ASCII: 97)  LED AN/AUS
       i_LED_level = (convert_ASCII_Code(readString[1])+convert_ASCII_Code(readString[2])+convert_ASCII_Code(readString[3])).toInt();
+      if(i_LED_level > 100)i_LED_level = 100;
       setLEDlevel(i_LED_level);
     }
     else if(iType == 104){      
@@ -144,24 +145,12 @@ void setLEDlevel(int val){
   analogWrite(mosfet_led_pin,lightValue);
 }
 
-long getPressure(){
-  val_pressure = 0;
-  if(barometer.IsConnected){
-    barometer.SoftReset();
-    barometer.Initialize();
-    for(int i = 0; i < 10; i++){
-      val_pressure += barometer.GetPressure();
-    }
-    val_pressure /= 10;
-  }
-  else{
-    val_pressure = 0;  
-  }
-  return val_pressure;
+int getPressure(){
+  return barometer.readPressure()/100;
 }
 
-float getTemperature(){
-  return dht_air.readTemperature();
+double getTemperature(){
+  return barometer.readTemperature();
 }
 
 float getHumidity(){
@@ -178,7 +167,7 @@ void displayTempHum(){
   display.setCursor(0,5);
   display.print("Temp: ");
   display.print(val_temperature);
-  display.println(" C");
+  display.println(" *C");
   display.println("");
   display.print("Hum: ");
   display.print(val_humidity);
@@ -196,7 +185,7 @@ void displayPressBright(){
   display.println("");
   display.print("Pres: ");
   display.print(val_pressure);
-  display.print(" Pa");
+  display.print(" hPa");
   display.display();
 }
 
