@@ -11,10 +11,10 @@
 
     <array name="array_label_identifiers">
         <item>@string/label_temperature</item>
-        <item>@string/label_pressure</item>
-        <item>@string/label_brightness</item>
         <item>@string/label_airHumidity</item>
+        <item>@string/label_pressure</item>
         <item>@string/label_terraHumidity</item>
+        <item>@string/label_brightness</item>
     </array>
 
 
@@ -39,7 +39,7 @@
         <item>%1$s °C</item>
         <item>%1$s g/m³</item>
         <item>%1$s lux</item>
-        <item>%1$s Pa</item>
+        <item>%1$s hPa</item>
         <item>%1$s %</item>
     </array>
 

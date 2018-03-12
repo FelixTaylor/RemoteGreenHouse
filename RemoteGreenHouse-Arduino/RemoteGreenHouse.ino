@@ -44,13 +44,14 @@ unsigned long delayMillis;
 
 boolean b_LED_state;        // State of the LED Stripes       (True: ON, False: OFF)
 int     i_LED_level;        // brightness of the LED Stripes  (0% - 100%)
+int     i_fan_level;        // state of the fan               (0: off, 1: partial load, 2: full load)
 int     val_pressure;       // pressure value                 [Pa]
 long    val_brightness;     // brightness value               [lux]
 double  val_temperature;    // temperature value              [°C]
 float   val_humidity;       // humidity value                 [%]
 float   val_moisture;       // moisture value                 [%]
 String  readString;         // read data of the serial input
-String  pressureLimiter, brightnessLimiter, temperatureLimiter, moistureLimiter, humidityLimiter, lightlevelLimiter;
+String  temperatureLimiter, humidityLimiter, pressureLimiter, moistureLimiter, brightnessLimiter, lightlevelLimiter, fanlevelLimiter;
 
 void setup() {
   /* 
@@ -95,10 +96,11 @@ void setup() {
 void loop() {
   // take sensor inputs
   curMillis         = millis();
-  val_brightness    = getLightIntensity();          // measure brightness
+  val_temperature   = getTemperature();             // measure val_temperature
   val_humidity      = getWaterContent();            // measure val_humidity
   val_pressure      = getPressure();                // measure val_pressure
-  val_temperature   = getTemperature();             // measure val_temperature
+  val_moisture      = 0;                            // until there is a moisture sensor
+  val_brightness    = getLightIntensity();          // measure brightness
   
   // Read SerialData if serial is available
   readString    = readComPort();
@@ -115,7 +117,8 @@ void loop() {
       setLEDlevel(i_LED_level);
     }
     else if(iType == 104){      
-      String sSendString = brightnessLimiter + val_brightness + humidityLimiter + val_humidity + pressureLimiter + val_pressure + temperatureLimiter + val_temperature + lightlevelLimiter + i_LED_level;
+      //String sSendString = brightnessLimiter + val_brightness + humidityLimiter + val_humidity + pressureLimiter + val_pressure + temperatureLimiter + val_temperature + lightlevelLimiter + i_LED_level;
+      String sSendString = temperatureLimiter + val_temperature + humidityLimiter + val_humidity + pressureLimiter + val_pressure + moistureLimiter + val_moisture + brightnessLimiter + val_brightness + lightlevelLimiter + i_LED_level + fanlevelLimiter + i_fan_level;
       Serial.println(sSendString);
       sSendString = "";
     }
@@ -232,17 +235,19 @@ String convert_ASCII_Code(int mASCII){
 void initializeVariables(){
   b_LED_state               = false;
   i_LED_level               = 0;
+  i_fan_level               = 0;
   val_brightness            = 0;
   val_pressure              = 0;
   val_temperature           = 0; 
   val_humidity              = 0;
   val_moisture              = 0;
-  pressureLimiter              = "p";
-  brightnessLimiter         = "h"; 
   temperatureLimiter        = "t";
-  moistureLimiter           = "b";
-  humidityLimiter           = "l";
-  lightlevelLimiter         = "g";
+  humidityLimiter           = "h";
+  pressureLimiter           = "p";
+  moistureLimiter           = "m";
+  brightnessLimiter         = "b"; 
+  lightlevelLimiter         = "l";
+  fanlevelLimiter           = "f";
   readString                = "";
   prevMillis                = millis();
   delayMillis               = 5000;
