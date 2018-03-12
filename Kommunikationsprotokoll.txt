@@ -1,5 +1,4 @@
 Arduino:
-startByte: 	c 	- ASCII 99	(Controller)
 endByte: 	\n 	- ASCII 10
 
 receivedData:			limiterByte		ASCII
@@ -17,13 +16,11 @@ sendData: Value			limiterBytes		ASCII
 	- ledState		l			108
 	- fanState		f			102
 
-sendString:atvalhvalpvalbvalmvallvalfval\n
+sendString: tvalhvalpvalmvalbvallvalfval\n
 
 
 
 App:
-startByte: 	a 	- ASCII 97		(Application)
-endByte: 	\n 	- ASCII 10
 
 receivedData:			limiterByte		ASCII
 	- temperature		t			116

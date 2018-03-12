@@ -107,20 +107,30 @@ void loop() {
 
   // evaluate incoming data
   if(readString.length() > 0){
-    // divide the readString into a Typ
-    //    a[97] : Controlling the LED
-    //    h[104]: send sensor values to the application
+    //    w[199]: send sensor values
+    //    x[120]: set LED state
+    //    y[121]: set fan state
+    //    z[122]: set pump state
     int iType = readString[0];
-    if(iType == 97){                              // Empfangsdaten: a (ASCII: 97)  LED AN/AUS
+    //w[199] send sensor values
+    if(iType == 119){
+      String sSendString = temperatureLimiter + val_temperature + humidityLimiter + val_humidity + pressureLimiter + val_pressure + moistureLimiter + val_moisture + brightnessLimiter + val_brightness + lightlevelLimiter + i_LED_level + fanlevelLimiter + i_fan_level;
+      Serial.println(sSendString);
+      sSendString = "";
+    }
+    //x[120] set LED state
+    else if(iType == 120){
       i_LED_level = (convert_ASCII_Code(readString[1])+convert_ASCII_Code(readString[2])+convert_ASCII_Code(readString[3])).toInt();
       if(i_LED_level > 100)i_LED_level = 100;
       setLEDlevel(i_LED_level);
     }
-    else if(iType == 104){      
-      //String sSendString = brightnessLimiter + val_brightness + humidityLimiter + val_humidity + pressureLimiter + val_pressure + temperatureLimiter + val_temperature + lightlevelLimiter + i_LED_level;
-      String sSendString = temperatureLimiter + val_temperature + humidityLimiter + val_humidity + pressureLimiter + val_pressure + moistureLimiter + val_moisture + brightnessLimiter + val_brightness + lightlevelLimiter + i_LED_level + fanlevelLimiter + i_fan_level;
-      Serial.println(sSendString);
-      sSendString = "";
+    //y[121] set fan state
+    else if(iType == 121){
+      
+    }
+    //z[122] set pump state
+    else if(iType == 122){
+      
     }
     iType = 0;
     readString = "";
@@ -149,7 +159,7 @@ void setLEDlevel(int val){
 }
 
 int getPressure(){
-  return barometer.readPressure()/100;
+  return (barometer.readPressure()+1158)/100;   //1158 = 9.81kg/m³ * 118m (bielefeld altitude)
 }
 
 double getTemperature(){

@@ -133,7 +133,7 @@ public class MainActivity extends AppCompatActivity {
             }
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                String sendString = "a" + Integer.toString(sb_LEDLightControl.getProgress());
+                String sendString = "x" + Integer.toString(sb_LEDLightControl.getProgress());
                 serialWrite(sendString);
             }
         });
@@ -236,7 +236,7 @@ public class MainActivity extends AppCompatActivity {
                         } catch (IOException e) {Log.d(TAG,"Could not create Inputstream");
                         }
                         beginListenForData();                                                                   // Create a communication thread
-                        serialWrite("h");                                                                    // send initial data
+                        serialWrite("w");                                                                    // send initial data
                     }
                 } else {
                     Log.e("error", "Bluetooth is disabled.");
@@ -295,7 +295,7 @@ public class MainActivity extends AppCompatActivity {
                 while(!Thread.currentThread().isInterrupted() && !stopWorker){
                     // synchronize sensor tableValues every 5 seconds
                     if(System.currentTimeMillis() - thread_pastMillis > 5000){
-                        serialWrite("h");
+                        serialWrite("w");
                         thread_pastMillis = System.currentTimeMillis();
                     }
                     // read from input stream
