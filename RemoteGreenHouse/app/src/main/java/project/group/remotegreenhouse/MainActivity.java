@@ -46,9 +46,11 @@ public class MainActivity extends AppCompatActivity {
     private SeekBar sb_LEDLightControl;                     // SeekBar to control the LED Stripes
     private Set<BluetoothDevice> pairedDevices;             // Set of paired bluetooth devices
     private Switch sw_BluetoothState;                       // Switch to turn ON/OFF bluetooth
-    private String s_ValuePressure, s_ValueTemperature, s_ValueBrightness, s_ValueAirHumidity, s_ValueTerraHumidity, s_ValueLEDState;
-    private TextView tv_ValuePressure, tv_ValueTemperature, tv_ValueBrightness, tv_ValueAirHumidity, tv_ValueTerraHumidity, tv_ValueLEDState;
+    //private String s_ValuePressure, s_ValueTemperature, s_ValueBrightness, s_ValueAirHumidity, s_ValueTerraHumidity, s_ValueLEDState;
+    //private TextView tv_ValuePressure, tv_ValueTemperature, tv_ValueBrightness, tv_ValueAirHumidity, tv_ValueTerraHumidity;
+    private TextView tv_ValueLEDState;
     private Thread workerThread;                            // Thread for bluetooth data stream
+    private double val_temperature, val_pressure, val_brightness, val_humidity, val_moisture, val_LED_state, val_fan_state;
 
     private LayoutInflater inflater;
     private TableLayout table;
@@ -95,7 +97,6 @@ public class MainActivity extends AppCompatActivity {
         sb_LEDLightControl.setMax(100);
         sb_LEDLightControl.setProgress(0);
         tv_ValueLEDState.setText(Integer.toString(0));
-        s_ValueLEDState = "";
         b_isInitialized = false;
 
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -299,6 +300,53 @@ public class MainActivity extends AppCompatActivity {
                                         public void run(){
                                             // evaluate the incoming data string
                                             for(int i = 0; i<data.length(); i++){
+                                                if(data.substring(i,i+1).equals("t")){
+                                                    for(int j = i; j < data.length(); j++){
+                                                        if(data.substring(j,j+1).equals("g")){
+                                                            readLimiterPosition = j;
+                                                        }
+                                                    }
+                                                    try{
+                                                        val_temperature = Double.valueOf(data.substring(i+1, readLimiterPosition));
+                                                        //tableValues[0] = Double.valueOf(data.substring(i+1, readLimiterPosition));
+                                                    } catch(NumberFormatException ex){
+                                                        val_temperature = Double.NaN;
+                                                        //tableValues[0] = Double.NaN;
+                                                    }
+                                                    //tableValues[0] = val_temperature;
+                                                    Log.d(TAG,"temperature: '" + tableValues[0] + "'");
+                                                    /*
+                                                    tableValues[1] = Double.valueOf(data.substring(i+1, readLimiterPosition));
+                                                    /*tv_ValueTemperature.setText(
+                                                            res.getString(R.string.dim_temperature,
+                                                            data.substring(i+1, readLimiterPosition))
+                                                    );*/
+                                                }
+                                                if(data.substring(i,i+1).equals("p")){
+                                                    for(int j = i; j < data.length(); j++){
+                                                        if(data.substring(j,j+1).equals("t")){
+                                                            readLimiterPosition = j;
+                                                        }
+                                                    }
+                                                    try{
+                                                        val_pressure = Double.valueOf(data.substring(i+1, readLimiterPosition));
+                                                        //tableValues[1] = Double.valueOf(data.substring(i+1, readLimiterPosition));
+                                                        String s_Val = data.substring(i+1, readLimiterPosition);
+                                                        Log.d(TAG,"pressure: '" + s_Val + "'");
+                                                    } catch(NumberFormatException ex){
+                                                        val_pressure = Double.NaN;
+                                                        //tableValues[1] = Double.NaN;
+                                                    }
+                                                    //tableValues[1] =val_pressure;
+                                                    Log.d(TAG,"pressure: '" + tableValues[1] + "'");
+                                                    /*
+
+                                                    tableValues[0] = Double.valueOf(data.substring(i+1, readLimiterPosition));
+                                                    tv_ValuePressure.setText(
+                                                            res.getString(R.string.dim_pressure,
+                                                            data.substring(i+1, readLimiterPosition))
+                                                    );*/
+                                                }
                                                 if(data.substring(i,i+1).equals("h")){
                                                     for(int j = i; j < data.length(); j++){
                                                         if(data.substring(j,j+1).equals("l")){
@@ -306,11 +354,14 @@ public class MainActivity extends AppCompatActivity {
                                                         }
                                                     }
                                                     try{
-                                                        tableValues[2] = Double.valueOf(data.substring(i+1, readLimiterPosition));
+                                                        val_brightness = Double.valueOf(data.substring(i+1, readLimiterPosition));
+                                                        //tableValues[2] = Double.valueOf(data.substring(i+1, readLimiterPosition));
                                                     } catch(NumberFormatException ex){
-                                                        tableValues[2] = Double.NaN;
+                                                        //tableValues[2] = Double.NaN;
+                                                        val_brightness = Double.NaN;
                                                     }
-                                                    Log.d(TAG,"brightness: '" + tableValues[2] + "'");
+                                                    //tableValues[2] = val_brightness;
+                                                    Log.d(TAG,"brightness: '" + val_brightness + "'");
                                                     /*
                                                     tableValues[2] = Double.valueOf(data.substring(i+1, readLimiterPosition));
                                                     tv_ValueBrightness.setText(
@@ -325,10 +376,13 @@ public class MainActivity extends AppCompatActivity {
                                                         }
                                                     }
                                                     try{
-                                                        tableValues[3] = Double.valueOf(data.substring(i+1, readLimiterPosition));
+                                                        val_humidity = Double.valueOf(data.substring(i+1, readLimiterPosition));
+                                                        //tableValues[3] = Double.valueOf(data.substring(i+1, readLimiterPosition));
                                                     } catch(NumberFormatException ex){
-                                                        tableValues[3] = Double.NaN;
+                                                        val_humidity = Double.NaN;
+                                                        //tableValues[3] = Double.NaN;
                                                     }
+                                                    //tableValues[3] = val_humidity;
                                                     Log.d(TAG,"humidity: '" + tableValues[3] + "'");
                                                     /*
                                                     try {
@@ -341,50 +395,16 @@ public class MainActivity extends AppCompatActivity {
                                                             data.substring(i+1, readLimiterPosition))
                                                     );*/
                                                 }
-                                                if(data.substring(i,i+1).equals("p")){
-                                                    for(int j = i; j < data.length(); j++){
-                                                        if(data.substring(j,j+1).equals("t")){
-                                                            readLimiterPosition = j;
-                                                        }
-                                                    }
-                                                    try{
-                                                        tableValues[1] = Double.valueOf(data.substring(i+1, readLimiterPosition));
-                                                    } catch(NumberFormatException ex){
-                                                        tableValues[1] = Double.NaN;
-                                                    }
-                                                    Log.d(TAG,"pressure: '" + tableValues[1] + "'");
-                                                    /*
-
-                                                    tableValues[0] = Double.valueOf(data.substring(i+1, readLimiterPosition));
-                                                    tv_ValuePressure.setText(
-                                                            res.getString(R.string.dim_pressure,
-                                                            data.substring(i+1, readLimiterPosition))
-                                                    );*/
-                                                }
-                                                if(data.substring(i,i+1).equals("t")){
-                                                    for(int j = i; j < data.length(); j++){
-                                                        if(data.substring(j,j+1).equals("g")){
-                                                            readLimiterPosition = j;
-                                                        }
-                                                    }
-                                                    try{
-                                                        tableValues[0] = Double.valueOf(data.substring(i+1, readLimiterPosition));
-                                                    } catch(NumberFormatException ex){
-                                                        tableValues[0] = Double.NaN;
-                                                    }
-                                                    Log.d(TAG,"temperature: '" + tableValues[0] + "'");
-                                                    /*
-                                                    tableValues[1] = Double.valueOf(data.substring(i+1, readLimiterPosition));
-                                                    /*tv_ValueTemperature.setText(
-                                                            res.getString(R.string.dim_temperature,
-                                                            data.substring(i+1, readLimiterPosition))
-                                                    );*/
-                                                }
                                                 if(data.substring(i,i+1).equals("g")){
-                                                    s_ValueLEDState = data.substring(i+1,data.length()-1);
-                                                    Log.d(TAG,"LED_Level: '" + s_ValueLEDState + "'");
-                                                    if(!b_isInitialized){           // initialize the seekbar if it is the first call
-                                                        sb_LEDLightControl.setProgress(Integer.parseInt(s_ValueLEDState));
+                                                    try{
+                                                        val_LED_state = Double.valueOf(data.substring(i+1, data.length()-1));
+                                                    }catch(NumberFormatException ex){
+                                                        val_LED_state = Double.NaN;
+                                                    }
+                                                    //s_ValueLEDState = data.substring(i+1,data.length()-1);
+                                                    Log.d(TAG,"LED_Level: '" + val_LED_state + "'");
+                                                    if(!b_isInitialized){           // initialize the seekbar if this is the first call
+                                                        sb_LEDLightControl.setProgress((int) val_LED_state);
                                                         b_isInitialized = true;
                                                     }
                                                 }
@@ -417,6 +437,11 @@ public class MainActivity extends AppCompatActivity {
         // We will generate and update
         // the table with te correct tableValues
         // here.
+
+        tableValues[0] = val_temperature;
+        tableValues[1] = val_pressure;
+        tableValues[2] = val_brightness;
+        tableValues[3] = val_humidity;
 
         table.removeAllViews();
         String valueInputs[] = new String[]{

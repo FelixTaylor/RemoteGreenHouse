@@ -30,7 +30,7 @@
     <string name="val_nan">NAN</string>
 
     <!--Physical Dimensions-->
-    <string name="dim_pressure">%1$s Pa</string>
+    <string name="dim_pressure">%1$s hPa</string>
     <string name="dim_humidity">%1$s g/m³</string>
     <string name="dim_brightness">%1$s lux</string>
     <string name="dim_temperature">%1$s °C</string>
