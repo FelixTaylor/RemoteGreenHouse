@@ -1,0 +1,41 @@
+Arduino:
+startByte: 	c 	- ASCII 99	(Controller)
+endByte: 	\n 	- ASCII 10
+
+receivedData:			limiterByte		ASCII
+	- sendValues()		w			119
+	- setLedState(i state)	x			120
+	- setFanState(i state)	y			121
+	- setPump(boolean b)	z			122
+
+sendData: Value			limiterBytes		ASCII
+	- temperature		t			116
+	- humidity		h			104
+	- pressure		p			112
+	- moisture		m			109
+	- brightness		b			98
+	- ledState		l			108
+	- fanState		f			102
+
+sendString:atvalhvalpvalbvalmvallvalfval\n
+
+
+
+App:
+startByte: 	a 	- ASCII 97		(Application)
+endByte: 	\n 	- ASCII 10
+
+receivedData:			limiterByte		ASCII
+	- temperature		t			116
+	- humidity		h			104
+	- pressure		p			112
+	- moisture		m			109
+	- brightness		b			98
+	- ledState		l			108
+	- fanState		f			102
+
+sendData: Value			limiterBytes		ASCII
+	- getValues()		w			119
+	- setLedState(i state)	x			120
+	- setFanState(i state)	y			121
+	- setPump(i state)	z			122
