@@ -46,8 +46,6 @@ public class MainActivity extends AppCompatActivity {
     private SeekBar sb_LEDLightControl;                     // SeekBar to control the LED Stripes
     private Set<BluetoothDevice> pairedDevices;             // Set of paired bluetooth devices
     private Switch sw_BluetoothState;                       // Switch to turn ON/OFF bluetooth
-    //private String s_ValuePressure, s_ValueTemperature, s_ValueBrightness, s_ValueAirHumidity, s_ValueTerraHumidity, s_ValueLEDState;
-    //private TextView tv_ValuePressure, tv_ValueTemperature, tv_ValueBrightness, tv_ValueAirHumidity, tv_ValueTerraHumidity;
     private TextView tv_ValueLEDState;
     private Thread workerThread;                            // Thread for bluetooth data stream
     private double val_temperature, val_pressure, val_brightness, val_humidity, val_moisture, val_LED_state, val_fan_state;
@@ -55,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
     private LayoutInflater inflater;
     private TableLayout table;
 
-    // 0 temperature, 1 pressure, 2 brightness, 3 humidity, 4 moisture,
+    // 0 temperature, 1 humidity, 2 pressure, 3 brightness, 4 moisture,
     private String tableIdentifiers[];
     private double tableValues[];
 
@@ -75,18 +73,6 @@ public class MainActivity extends AppCompatActivity {
         sw_BluetoothState  = findViewById(R.id.sw_BluetoothONOFF);
         btn_bt_connect     = findViewById(R.id.btn_Connect);
         table              = findViewById(R.id.table);
-
-        // TODO: Remove these textViews and ID's
-        // If we use the updateTable method to show the tableValues
-        // we don't need these variables.
-
-       /* tv_ValueTemperature     = findViewById(R.id.val_temperature);
-        tv_ValuePressure        = findViewById(R.id.val_pressure);
-        tv_ValueBrightness      = findViewById(R.id.val_brightness);
-        tv_ValueAirHumidity     = findViewById(R.id.val_airHumidity);
-        tv_ValueTerraHumidity   = findViewById(R.id.val_terraHumidity);
-*/
-        // ----------------------------------------------------------------
 
         // Initialize Values
 
@@ -114,11 +100,6 @@ public class MainActivity extends AppCompatActivity {
         --------------------------*/
         sw_BluetoothState.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                /*if(b){
-                    enableBluetooth();
-                } else {
-                    disableBluetooth();
-                }*/
                 toggleBluetooth(b);
             }
         });
@@ -153,28 +134,6 @@ public class MainActivity extends AppCompatActivity {
     /*---------------------------
       -----Additional Methods-----
       ---------------------------*/
-    /*private void enableBluetooth(){
-        // enables bluetooth adapter if it is disabled
-        if(!bluetoothAdapter.isEnabled()) {
-            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-        }
-        while(!bluetoothAdapter.isEnabled()){
-            //wait until bt is enabled
-        }
-        Toast.makeText(getApplicationContext(), "Bluetooth ON", Toast.LENGTH_SHORT).show();
-    }*/
-
-    /*private void disableBluetooth(){
-        // disables bluetooth adapter if it is enabled
-        if(bluetoothAdapter.isEnabled()){
-            bluetoothAdapter.disable();
-        }
-        while(bluetoothAdapter.isEnabled()){
-            //wait until bt is disabled
-        }
-        Toast.makeText(getApplicationContext(), "Bluetooth OFF", Toast.LENGTH_SHORT).show();
-    }*/
     private void toggleBluetooth(boolean b) {
         String msg;
         if(b){
@@ -423,65 +382,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }
-        /*
-        for(int i = 0; i< str_data.length(); i++){
-            if(str_data.substring(i,i+1).equals("t")){
-                for(int j = i; j < str_data.length(); j++){
-                    if(str_data.substring(j,j+1).equals("g")){
-                        readLimiterPosition = j;
-                    }
-                }
-                try{
-                    val_temperature = Double.valueOf(str_data.substring(i+1, readLimiterPosition));
-                } catch(NumberFormatException ex){
-                    val_temperature = Double.NaN;
-                }
-            }
-            if(str_data.substring(i,i+1).equals("l")){
-                for(int j = i; j < str_data.length(); j++){
-                    if(str_data.substring(j,j+1).equals("p")){
-                        readLimiterPosition = j;
-                    }
-                }
-                try{
-                    val_humidity = Double.valueOf(str_data.substring(i+1, readLimiterPosition));
-                } catch(NumberFormatException ex){
-                    val_humidity = Double.NaN;
-                }
-            }
-            if(str_data.substring(i,i+1).equals("p")){
-                for(int j = i; j < str_data.length(); j++){
-                    if(str_data.substring(j,j+1).equals("t")){
-                        readLimiterPosition = j;
-                    }
-                }
-                try{
-                    val_pressure = Double.valueOf(str_data.substring(i+1, readLimiterPosition));
-                } catch(NumberFormatException ex){
-                    val_pressure = Double.NaN;
-                }
-            }
-            if(str_data.substring(i,i+1).equals("h")){
-                for(int j = i; j < str_data.length(); j++){
-                    if(str_data.substring(j,j+1).equals("l")){
-                        readLimiterPosition = j;
-                    }
-                }
-                try{
-                    val_brightness = Double.valueOf(str_data.substring(i+1, readLimiterPosition));
-                } catch(NumberFormatException ex){
-                    val_brightness = Double.NaN;
-                }
-            }
-            if(str_data.substring(i,i+1).equals("g")){
-                try{
-                    val_LED_state = Double.valueOf(str_data.substring(i+1, str_data.length()-1));
-                }catch(NumberFormatException ex){
-                    val_LED_state = Double.NaN;
-                }
-            }
-        }
-        */
         if(!b_isInitialized){
             sb_LEDLightControl.setProgress((int) val_LED_state);
             b_isInitialized = true;
