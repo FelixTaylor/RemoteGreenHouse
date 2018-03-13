@@ -6,6 +6,7 @@
 #include <BH1750FVI.h>
 
 // Pin declaration
+#define DHTTYPE DHT22
 #define dht_terra_pin 4
 #define dht_air_pin 5
 #define relay1_pin 6
@@ -33,8 +34,8 @@ void displayTempHum();
 // object setup
 Adafruit_BMP085 barometer;                  //Barometer BMP180
 Adafruit_SSD1306 display(4);                //Display 
-DHT dht_air(DHT22, dht_air_pin);            //DHT22 Luftsensor an Pin D5
-DHT dht_terra(DHT22, dht_terra_pin);        //DHT22 Bodensensor an Pin D4
+DHT dht_air(dht_air_pin, DHTTYPE);          //DHT22 Luftsensor an Pin D5
+DHT dht_terra(dht_terra_pin, DHTTYPE);      //DHT22 Bodensensor an Pin D4
 BH1750FVI lightSensor;                      //Lichtesensorobjekt
 
 // parameter declaration
@@ -163,7 +164,7 @@ int getPressure(){
 }
 
 double getTemperature(){
-  return barometer.readTemperature();
+  return dht_air.readTemperature();
 }
 
 float getHumidity(){
