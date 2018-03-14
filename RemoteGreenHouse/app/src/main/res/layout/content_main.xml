@@ -6,76 +6,16 @@
     tools:context="project.group.remotegreenhouse.MainActivity"
     tools:showIn="@layout/activity_main" android:background="@color/colorActivityBackground">
 
-    <LinearLayout style="@style/Container.Horizontal">
-
-        <Button android:id="@+id/btn_Connect" style="@style/DefaultButton"
-            android:text="@string/btn_connect" android:textAlignment="center" />
-
-        <Switch android:id="@+id/sw_BluetoothONOFF" style="@style/SCBSwitch"
-            android:text="@string/label_bluetooth" android:layout_weight="1"
-            android:layout_width="0dp" android:textAlignment="textEnd"/>
-    </LinearLayout>
-
     <LinearLayout style="@style/Container.Vertical">
         <TextView android:id="@+id/tw_LEDState" style="@style/Label.Title"
             android:layout_width="match_parent" android:textAlignment="center"/>
+
         <SeekBar android:id="@+id/sb_LEDState" android:layout_width="match_parent"
             android:layout_height="wrap_content" />
+
     </LinearLayout>
 
-    <!--
-
-    New ListView to display green house values
-
--->
-
-    <TableLayout android:id="@+id/table"
-        android:layout_width="match_parent"
+    <TableLayout android:id="@+id/table" android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
-<!--
-
-    <TableLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:stretchColumns="1" app:layout_constraintTop_toBottomOf="@+id/sb_LEDState">
-
-        <TableRow>
-            <TextView android:layout_column="1" android:padding="3dip" android:text="@string/label_temperature" />
-            <TextView android:id="@+id/val_temperature" android:gravity="end" android:padding="3dip"
-                android:text="@string/dim_temperature" />
-        </TableRow>
-
-        <View android:layout_height="2dip" android:background="#FF909090" />
-
-        <TableRow>
-            <TextView android:layout_column="1" android:padding="3dip" android:text="@string/label_pressure" />
-            <TextView android:id="@+id/val_pressure" android:gravity="end" android:padding="3dip"
-                android:text="@string/dim_pressure" />
-        </TableRow>
-
-        <View android:layout_height="2dip" android:background="#FF909090" />
-
-        <TableRow>
-            <TextView android:layout_column="1" android:padding="3dip" android:text="@string/label_brightness" />
-            <TextView android:id="@+id/val_brightness" android:gravity="end" android:padding="3dip"
-                android:text="@string/dim_brightness" />
-        </TableRow>
-
-        <View android:layout_height="2dip" android:background="#FF909090" />
-
-        <TableRow>
-            <TextView android:layout_column="1" android:padding="3dip" android:text="@string/label_airHumidity" />
-            <TextView android:id="@+id/val_airHumidity" android:gravity="end" android:padding="3dip"
-                android:text="@string/dim_humidity" />
-        </TableRow>
-
-        <View android:layout_height="2dip" android:background="#FF909090" />
-
-        <TableRow>
-            <TextView android:layout_height="41dp" android:layout_column="1" android:padding="3dip"
-                android:text="@string/label_terraHumidity" />
-            <TextView android:id="@+id/val_terraHumidity" android:gravity="end"
-                android:padding="3dip" android:text="@string/dim_humidity" />
-        </TableRow>
-    </TableLayout>
-    -->
 </LinearLayout>

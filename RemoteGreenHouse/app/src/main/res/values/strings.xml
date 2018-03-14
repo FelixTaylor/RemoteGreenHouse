@@ -18,6 +18,9 @@
     </array>
 
 
+    <!-- Actions -->
+    <string name="action_connect_bluetooth">Enable Bluetooth</string>
+    <string name="action_disconnect_bluetooth">Disable Bluetooth</string>
 
     <!--Buttons-->
     <string name="btn_connect">Connect</string>
@@ -26,6 +29,10 @@
     <string name="msg_bt_connected">Connected</string>
     <string name="msg_bt_disconnected">Not Connected</string>
     <string name="msg_bt_connecting">Connecting &#8230;</string>
+    <string name="msg_bt_on">Bluetooth is enabled.</string>
+    <string name="msg_bt_off">Bluetooth is disabled.</string>
+    <string name="msg_bt_turn_on_bt">Please enable bluetooth to connect to a green house.</string>
+    <string name="msg_no_device_found">No green house detected.</string>
 
     <string name="val_nan">NAN</string>
 

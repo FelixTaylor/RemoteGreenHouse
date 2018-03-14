@@ -24,6 +24,12 @@
     <!-- Each section in an activity is
     divided by one of these sub containers -->
 
+    <style name="ToolbarTheme" parent="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+        <item name="colorAccent">@color/colorTableLight</item>
+        <item name="colorControlNormal">@color/colorTableLight</item>
+        <item name="colorControlActivated">@color/colorTableLight</item>
+        <item name="colorControlHighlight">@color/colorTableLight</item>
+    </style>
     <style name="Container.Horizontal">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
