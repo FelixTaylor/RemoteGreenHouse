@@ -11,10 +11,14 @@ import android.os.Handler;
 import android.os.ParcelUuid;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.CompoundButton;
 import android.widget.SeekBar;
 import android.widget.Switch;
@@ -35,7 +39,6 @@ public class MainActivity extends AppCompatActivity {
     private BluetoothSocket bluetoothSocket;                // Bluetooth communication Socket
     private volatile boolean stopWorker;                    // Variable to stop the communication thread
     private boolean b_isInitialized;                        // Set to true, if state got initialized data from arduino
-    private Button btn_bt_connect;                          // Button to connect to coupled bluetooth device
     private byte[] readBuffer;                              // Serial Buffer
     private int readBufferPosition;                         // Current pointer position for data reading
     private int readLimiterPosition;                        // Current pointer position for searching limiter characters
@@ -45,7 +48,6 @@ public class MainActivity extends AppCompatActivity {
     private OutputStream outputStream;                      // Bluetooth communication Outputstream
     private SeekBar sb_LEDLightControl;                     // SeekBar to control the LED Stripes
     private Set<BluetoothDevice> pairedDevices;             // Set of paired bluetooth devices
-    private Switch sw_BluetoothState;                       // Switch to turn ON/OFF bluetooth
     private TextView tv_ValueLEDState;
     private Thread workerThread;                            // Thread for bluetooth data stream
     private double val_temperature, val_pressure, val_brightness, val_humidity, val_moisture, val_LED_state, val_fan_state;
@@ -57,11 +59,26 @@ public class MainActivity extends AppCompatActivity {
     private String tableIdentifiers[];
     private double tableValues[];
 
+    private class SeekbarListener implements SeekBar.OnSeekBarChangeListener {
+        @Override public void onStartTrackingTouch(SeekBar seekBar) {}
+        @Override public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+            tv_ValueLEDState.setText(Integer.toString(sb_LEDLightControl.getProgress()));
+        }
+        @Override public void onStopTrackingTouch(SeekBar seekBar) {
+            if(bluetoothAdapter.isEnabled() && outputStream != null) {
+                String sendString = "x" + Integer.toString(sb_LEDLightControl.getProgress());
+                serialWrite(sendString);
+            }
+        }
+    }
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         res = getResources();
+
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
 
         // Prepare and set receiver for bluetooth actions
         IntentFilter filter = new IntentFilter();
@@ -70,8 +87,6 @@ public class MainActivity extends AppCompatActivity {
 
         sb_LEDLightControl = findViewById(R.id.sb_LEDState);
         tv_ValueLEDState   = findViewById(R.id.tw_LEDState);
-        sw_BluetoothState  = findViewById(R.id.sw_BluetoothONOFF);
-        btn_bt_connect     = findViewById(R.id.btn_Connect);
         table              = findViewById(R.id.table);
 
         // Initialize Values
@@ -82,102 +97,94 @@ public class MainActivity extends AppCompatActivity {
 
         sb_LEDLightControl.setMax(100);
         sb_LEDLightControl.setProgress(0);
-        tv_ValueLEDState.setText(Integer.toString(0));
+        tv_ValueLEDState.setText(Integer.toString(sb_LEDLightControl.getProgress()));
         b_isInitialized = false;
 
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-
-        // Check bluetooth adapters state for enable switch
-        if(bluetoothAdapter.isEnabled()){
-            sw_BluetoothState.setChecked(true);
-        } else {
-            sw_BluetoothState.setChecked(false);
-        }
-
-
-        /*------------------------
-        -------Set Listener-------
-        --------------------------*/
-        sw_BluetoothState.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                toggleBluetooth(b);
-            }
-        });
-        sb_LEDLightControl.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-                tv_ValueLEDState.setText(Integer.toString(sb_LEDLightControl.getProgress()));
-            }
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-                String sendString = "x" + Integer.toString(sb_LEDLightControl.getProgress());
-                serialWrite(sendString);
-            }
-        });
-        btn_bt_connect.setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View view) {
-                Toast.makeText(getApplicationContext(),res.getString(R.string.msg_bt_connecting),Toast.LENGTH_SHORT).show();
-                connectToPairedDevice();
-            }
-        });
-
-        // I will change the table layout therefor we will need
-        // this method to reload the table and show the user the
-        // correct tableValues.
+        sb_LEDLightControl.setOnSeekBarChangeListener(new SeekbarListener());
         updateTable();
     }
 
+    @Override public boolean onPrepareOptionsMenu(Menu menu) {
+        MenuItem bluetooth = menu.getItem(0);
+
+        if(bluetoothAdapter.isEnabled()){
+            bluetooth.setIcon(res.getDrawable(R.mipmap.ic_bluetooth_white));
+        } else {
+            bluetooth.setIcon(res.getDrawable(R.mipmap.ic_bluetooth_disabled_white));
+        }
+
+        return super.onPrepareOptionsMenu(menu);
+    }
+    @Override public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+    @Override public boolean onOptionsItemSelected(MenuItem item) {
+
+        switch (item.getItemId()) {
+            case R.id.action_bluetooth : {
+                boolean bluetoothIsEnabled = true;
+
+                if(bluetoothAdapter.isEnabled()){
+                    bluetoothIsEnabled = false;
+                    item.setIcon(res.getDrawable(R.mipmap.ic_bluetooth_disabled_white));
+                } else {
+                    item.setIcon(res.getDrawable(R.mipmap.ic_bluetooth_white));
+                }
+
+                toggleBluetooth(bluetoothIsEnabled);
+                break;
+            }
+
+            case R.id.action_settings : {
+                break;
+            }
+        }
+        return true;
+    }
     /*---------------------------
       -----Additional Methods-----
       ---------------------------*/
     private void toggleBluetooth(boolean b) {
-        String msg;
-        if(b){
+        String msg = "";
 
-            if(!bluetoothAdapter.isEnabled()) {
-                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-            }
+        if(b && !bluetoothAdapter.isEnabled()){
+            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+
             while(!bluetoothAdapter.isEnabled()){
                 //wait until bt is enabled
             }
-            msg= "Bluetooth ON";
+            msg = res.getString(R.string.msg_bt_on);
 
-        } else {
+        } else if (!b && bluetoothAdapter.isEnabled()){
 
-            if(bluetoothAdapter.isEnabled()){
-                stopListenForData();
-                bluetoothAdapter.disable();
-            }
+            stopListenForData();
+            bluetoothAdapter.disable();
+
             while(bluetoothAdapter.isEnabled()){
                 //wait until bt is disabled
             }
-            msg= "Bluetooth OFF";
-
+            msg = res.getString(R.string.msg_bt_off);
         }
 
         Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
     }
 
-    private void connectToPairedDevice(){
-        // connects bluetooth adapter to a paired bluetooth device
-        // I think we can write:
-        // if (bluetoothAdapter != null && bluetoothAdapter.isEnabled())
-        // at this position
+    private void connectToPairedDevice() {
         if (bluetoothAdapter != null) {
+
             pairedDevices = bluetoothAdapter.getBondedDevices();
-            if (bluetoothAdapter.isEnabled()) {
-                Set<BluetoothDevice> bondedDevices = bluetoothAdapter.getBondedDevices();                       // get bonded devices
-                if (bondedDevices.size() > 0) {
-                    for (BluetoothDevice mDevice : pairedDevices) {
-                        if (mDevice.getName().equals("HC-05")) {                                                // Looking for HC-05 device
-                            device = mDevice;
-                        }
+            Set<BluetoothDevice> bondedDevices = bluetoothAdapter.getBondedDevices();                       // get bonded devices
+
+            if (bondedDevices.size() > 0) {
+                for (BluetoothDevice mDevice : pairedDevices) {
+                    if (mDevice.getName().equals("HC-05")) {                                                // Looking for HC-05 device
+
+                        device = mDevice;
                         ParcelUuid[] uuids = device.getUuids();
+
                         try {
                             bluetoothSocket = device.createRfcommSocketToServiceRecord(uuids[0].getUuid());     // Create communication socket
                         } catch (IOException e) { Log.d(TAG,"Could not create Socket");
@@ -194,12 +201,21 @@ public class MainActivity extends AppCompatActivity {
                             inputStream = bluetoothSocket.getInputStream();                                     // Create an input stream
                         } catch (IOException e) {Log.d(TAG,"Could not create Inputstream");
                         }
+
                         beginListenForData();                                                                   // Create a communication thread
-                        serialWrite("w");                                                                    // send initial data
+                        serialWrite("w");
                     }
-                } else {
-                    Log.e("error", "Bluetooth is disabled.");
                 }
+
+                if (device == null) {
+                    Toast.makeText(getApplicationContext(),
+                            res.getString(R.string.msg_no_device_found),
+                            Toast.LENGTH_SHORT
+                    ).show();
+                }
+
+            } else {
+                Log.e("error", "No bonded devices.");
             }
         }
     }
@@ -208,7 +224,9 @@ public class MainActivity extends AppCompatActivity {
         // writes the string s to the output stream
         try {
             outputStream.write(s.getBytes());
-        }catch(IOException e){Log.i(TAG,"could not send String");}
+        } catch(IOException e){
+            Log.i(TAG,"could not send String");
+        }
     }
 
     private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
@@ -231,10 +249,11 @@ public class MainActivity extends AppCompatActivity {
         readBufferPosition = 0;
         //reset tableValues and SeekBar
         sb_LEDLightControl.setProgress(0);
-        tableValues[0] = 0.0;
-        tableValues[1] = 0.0;
-        tableValues[2] = 0.0;
-        tableValues[3] = 0.0;
+
+        for (int i=0; i<tableValues.length; i++) {
+            tableValues[i] = 0.0;
+        }
+
         updateTable();
     }
 
@@ -301,6 +320,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void getValuesFromData(String str_data){
         Log.d(TAG,"Data: '" + str_data + "'");
+        
         for(int i = 0; i < str_data.length(); i++){
             if(str_data.substring(i,i+1).equals("t")){
                 for(int j = i; j < str_data.length(); j++){
@@ -425,7 +445,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void action_button(View v) {
-        Toast.makeText(getApplicationContext(),res.getString(R.string.msg_bt_connecting),Toast.LENGTH_SHORT).show();
-        connectToPairedDevice();
+        String msg;
+        if(bluetoothAdapter.isEnabled()) {
+            msg = res.getString(R.string.msg_bt_connecting);
+            connectToPairedDevice();
+        } else {
+            msg = res.getString(R.string.msg_bt_turn_on_bt);
+        }
+
+        Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG).show();
     }
 }

@@ -10,8 +10,8 @@
     <color name="color_secondary">#8e24aa</color>
     <color name="color_secondary_dark">#5c007a</color>
 
-    <color name="colorActivityBackground">#c5c5c5</color>
-    <color name="colorTableLight">#bebebe</color>
+    <color name="colorActivityBackground">#ffffff</color>
+    <color name="colorTableLight">#dedede</color>
     <color name="colorText">#131313</color>
 
     <!--Switch Colors-->
