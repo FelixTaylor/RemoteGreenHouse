@@ -1,4 +1,3 @@
-#include <SPI.h>
 #include <Wire.h>
 #include <Adafruit_BMP085.h>
 #include <DHT.h>
@@ -52,7 +51,8 @@ double  val_temperature;    // temperature value              [°C]
 float   val_humidity;       // humidity value                 [%]
 float   val_moisture;       // moisture value                 [%]
 String  readString;         // read data of the serial input
-String  temperatureLimiter, humidityLimiter, pressureLimiter, moistureLimiter, brightnessLimiter, lightlevelLimiter, fanlevelLimiter;
+//String  temperatureLimiter, humidityLimiter, pressureLimiter, moistureLimiter, brightnessLimiter, lightlevelLimiter, fanlevelLimiter;
+String  limiterByte;        // limiter Byte for serial communication
 
 void setup() {
   /* 
@@ -115,7 +115,7 @@ void loop() {
     int iType = readString[0];
     //w[199] send sensor values
     if(iType == 119){
-      String sSendString = temperatureLimiter + val_temperature + humidityLimiter + val_humidity + pressureLimiter + val_pressure + moistureLimiter + val_moisture + brightnessLimiter + val_brightness + lightlevelLimiter + i_LED_level + fanlevelLimiter + i_fan_level;
+      String sSendString = val_temperature + limiterByte + val_humidity + limiterByte + val_pressure + limiterByte + val_moisture + limiterByte + val_brightness + limiterByte + i_LED_level + limiterByte + i_fan_level + limiterByte;
       Serial.println(sSendString);
       sSendString = "";
     }
@@ -252,13 +252,7 @@ void initializeVariables(){
   val_temperature           = 0; 
   val_humidity              = 0;
   val_moisture              = 0;
-  temperatureLimiter        = "t";
-  humidityLimiter           = "h";
-  pressureLimiter           = "p";
-  moistureLimiter           = "m";
-  brightnessLimiter         = "b"; 
-  lightlevelLimiter         = "l";
-  fanlevelLimiter           = "f";
+  limiterByte               = ";";      //ASCII 59
   readString                = "";
   prevMillis                = millis();
   delayMillis               = 5000;
