@@ -17,11 +17,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
-import android.widget.CompoundButton;
 import android.widget.SeekBar;
-import android.widget.Switch;
 import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -42,6 +38,7 @@ public class MainActivity extends AppCompatActivity {
     private byte[] readBuffer;                              // Serial Buffer
     private int readBufferPosition;                         // Current pointer position for data reading
     private int readLimiterPosition;                        // Current pointer position for searching limiter characters
+    private int it_getValues;                   // Iterator in getSensorValues
 
     private InputStream inputStream;                        // Bluetooth communication Inputsream
     private long thread_pastMillis;                         // last send data time
@@ -51,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView tv_ValueLEDState;
     private Thread workerThread;                            // Thread for bluetooth data stream
     private double val_temperature, val_pressure, val_brightness, val_humidity, val_moisture, val_LED_state, val_fan_state;
+    private double sensorValues[];
 
     private LayoutInflater inflater;
     private TableLayout table;
@@ -90,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
         table              = findViewById(R.id.table);
 
         // Initialize Values
-
+        sensorValues = new double[7];
         tableValues = new double[5];
         tableIdentifiers = res.getStringArray(R.array.array_label_identifiers);
         inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -293,7 +291,7 @@ public class MainActivity extends AppCompatActivity {
                                         public void run(){
                                             // evaluate the incoming data string
                                             getValuesFromData(data);
-                                            setTableValues();
+                                            //setTableValues();
                                             updateTable();
                                         }
                                     });
@@ -320,87 +318,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void getValuesFromData(String str_data){
         Log.d(TAG,"Data: '" + str_data + "'");
-        
-        for(int i = 0; i < str_data.length(); i++){
-            if(str_data.substring(i,i+1).equals("t")){
-                for(int j = i; j < str_data.length(); j++){
-                    if(str_data.substring(j,j+1).equals("h")){
-                        readLimiterPosition = j;
-                    }
-                }
-                try{
-                    val_temperature = Double.valueOf(str_data.substring(i+1, readLimiterPosition));
-                }catch(NumberFormatException ex){
-                    val_temperature = Double.NaN;
-                }
-            }
-            if(str_data.substring(i,i+1).equals("h")){
-                for(int j = i; j < str_data.length(); j++){
-                    if(str_data.substring(j,j+1).equals("p")){
-                        readLimiterPosition = j;
-                    }
-                }
-                try{
-                    val_humidity = Double.valueOf(str_data.substring(i+1, readLimiterPosition));
-                }catch(NumberFormatException ex){
-                    val_humidity = Double.NaN;
-                }
-            }
-            if(str_data.substring(i,i+1).equals("p")){
-                for(int j = i; j < str_data.length(); j++){
-                    if(str_data.substring(j,j+1).equals("m")){
-                        readLimiterPosition = j;
-                    }
-                }
-                try{
-                    val_pressure = Double.valueOf(str_data.substring(i+1, readLimiterPosition));
-                }catch(NumberFormatException ex){
-                    val_pressure = Double.NaN;
-                }
-            }
-            if(str_data.substring(i,i+1).equals("m")){
-                for(int j = i; j < str_data.length(); j++){
-                    if(str_data.substring(j,j+1).equals("b")){
-                        readLimiterPosition = j;
-                    }
-                }
-                try{
-                   val_moisture = Double.valueOf(str_data.substring(i+1, readLimiterPosition));
-                }catch(NumberFormatException ex){
-                   val_moisture = Double.NaN;
-                }
-            }
-            if(str_data.substring(i,i+1).equals("b")){
-                for(int j = i; j < str_data.length(); j++){
-                    if(str_data.substring(j,j+1).equals("l")){
-                        readLimiterPosition = j;
-                    }
-                }
-                try{
-                   val_brightness = Double.valueOf(str_data.substring(i+1, readLimiterPosition));
-                }catch(NumberFormatException ex){
-                   val_brightness = Double.NaN;
-                }
-            }
-            if(str_data.substring(i,i+1).equals("l")){
-                for(int j = i; j < str_data.length(); j++){
-                    if(str_data.substring(j,j+1).equals("f")){
-                        readLimiterPosition = j;
-                    }
-                }
-                try{
-                   val_LED_state = Double.valueOf(str_data.substring(i+1, readLimiterPosition));
-                }catch(NumberFormatException ex){
-                   val_LED_state = Double.NaN;
-                }
-            }
-            if(str_data.substring(i,i+1).equals("f")){
-                try{
-                   val_fan_state = Double.valueOf(str_data.substring(i+1, str_data.length()-1));
-                }catch(NumberFormatException ex){
-                   val_fan_state = Double.NaN;
-                }
-            }
+        it_getValues = 0;
+        for(int i=0; i<sensorValues.length; i++){
+            sensorValues[i] = getSensorValues(str_data);
         }
         if(!b_isInitialized){
             sb_LEDLightControl.setProgress((int) val_LED_state);
@@ -408,26 +328,32 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void setTableValues() {
-        tableValues[0] = val_temperature;
-        tableValues[1] = val_humidity;
-        tableValues[2] = val_pressure;
-        tableValues[3] = val_moisture;
-        tableValues[4] = val_brightness;
+    private double getSensorValues(String str_data){
+        double mDouble;
+        int myInt = it_getValues;
+        for(int j = it_getValues +1; j < str_data.length(); j++){
+            if(str_data.substring(j,j+1).equals(";")){
+                readLimiterPosition = j;
+                it_getValues = j+1;
+                break;
+            }
+        }
+        try{
+            mDouble = Double.valueOf(str_data.substring(myInt, readLimiterPosition));
+        }catch(NumberFormatException ex){
+            mDouble = Double.NaN;
+        }
+        return mDouble;
     }
 
     private void updateTable() {
-        // We will generate and update
-        // the table with te correct tableValues
-        // here.
-
         table.removeAllViews();
         String valueInputs[] = new String[]{
-                res.getString(R.string.dim_temperature, String.valueOf(tableValues[0])),
-                res.getString(R.string.dim_humidity, String.valueOf(tableValues[1])),
-                res.getString(R.string.dim_pressure, String.valueOf(tableValues[2])),
-                res.getString(R.string.dim_humidity, String.valueOf(tableValues[3])),
-                res.getString(R.string.dim_brightness, String.valueOf(tableValues[4])),
+                res.getString(R.string.dim_temperature, String.valueOf(sensorValues[0])),
+                res.getString(R.string.dim_humidity, String.valueOf(sensorValues[1])),
+                res.getString(R.string.dim_pressure, String.valueOf(sensorValues[2])),
+                res.getString(R.string.dim_humidity, String.valueOf(sensorValues[3])),
+                res.getString(R.string.dim_brightness, String.valueOf(sensorValues[4])),
         };
 
 
