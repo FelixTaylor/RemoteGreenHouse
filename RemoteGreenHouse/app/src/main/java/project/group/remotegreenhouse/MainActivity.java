@@ -172,55 +172,51 @@ public class MainActivity extends AppCompatActivity {
         Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
     }
 
-    private void connectToPairedDevice(){
-        // connects bluetooth adapter to a paired bluetooth device
-        // I think we can write:
-        // if (bluetoothAdapter != null && bluetoothAdapter.isEnabled())
-        // at this position
+    private void connectToPairedDevice() {
         if (bluetoothAdapter != null) {
+
             pairedDevices = bluetoothAdapter.getBondedDevices();
-            //if (bluetoothAdapter.isEnabled()) {
             Set<BluetoothDevice> bondedDevices = bluetoothAdapter.getBondedDevices();                       // get bonded devices
+
             if (bondedDevices.size() > 0) {
                 for (BluetoothDevice mDevice : pairedDevices) {
                     if (mDevice.getName().equals("HC-05")) {                                                // Looking for HC-05 device
+
                         device = mDevice;
-                    }
+                        ParcelUuid[] uuids = device.getUuids();
 
+                        try {
+                            bluetoothSocket = device.createRfcommSocketToServiceRecord(uuids[0].getUuid());     // Create communication socket
+                        } catch (IOException e) { Log.d(TAG,"Could not create Socket");
+                        }
+                        try {
+                            bluetoothSocket.connect();                                                          // Connect socket
+                        } catch (IOException e) {Log.d(TAG,"Could not connect");
+                        }
+                        try {
+                            outputStream = bluetoothSocket.getOutputStream();                                   // Create an output stream
+                        } catch (IOException e) {Log.d(TAG,"Could not create Outputstream");
+                        }
+                        try {
+                            inputStream = bluetoothSocket.getInputStream();                                     // Create an input stream
+                        } catch (IOException e) {Log.d(TAG,"Could not create Inputstream");
+                        }
 
-                    if (device == null) {
-                        Toast.makeText(getApplicationContext(),
-                                res.getString(R.string.msg_no_device_found),
-                                Toast.LENGTH_SHORT
-                        ).show();
-                        break;
+                        beginListenForData();                                                                   // Create a communication thread
+                        serialWrite("w");
                     }
-
-
-                    ParcelUuid[] uuids = device.getUuids();
-                    try {
-                        bluetoothSocket = device.createRfcommSocketToServiceRecord(uuids[0].getUuid());     // Create communication socket
-                    } catch (IOException e) { Log.d(TAG,"Could not create Socket");
-                    }
-                    try {
-                        bluetoothSocket.connect();                                                          // Connect socket
-                    } catch (IOException e) {Log.d(TAG,"Could not connect");
-                    }
-                    try {
-                        outputStream = bluetoothSocket.getOutputStream();                                   // Create an output stream
-                    } catch (IOException e) {Log.d(TAG,"Could not create Outputstream");
-                    }
-                    try {
-                        inputStream = bluetoothSocket.getInputStream();                                     // Create an input stream
-                    } catch (IOException e) {Log.d(TAG,"Could not create Inputstream");
-                    }
-                    beginListenForData();                                                                   // Create a communication thread
-                    serialWrite("w");                                                                    // send initial data
                 }
+
+                if (device == null) {
+                    Toast.makeText(getApplicationContext(),
+                            res.getString(R.string.msg_no_device_found),
+                            Toast.LENGTH_SHORT
+                    ).show();
+                }
+
             } else {
-                Log.e("error", "Bluetooth is disabled.");
+                Log.e("error", "No bonded devices.");
             }
-            //}
         }
     }
 
@@ -253,10 +249,11 @@ public class MainActivity extends AppCompatActivity {
         readBufferPosition = 0;
         //reset tableValues and SeekBar
         sb_LEDLightControl.setProgress(0);
-        tableValues[0] = 0.0;
-        tableValues[1] = 0.0;
-        tableValues[2] = 0.0;
-        tableValues[3] = 0.0;
+
+        for (int i=0; i<tableValues.length; i++) {
+            tableValues[i] = 0.0;
+        }
+
         updateTable();
     }
 
@@ -323,6 +320,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void getValuesFromData(String str_data){
         Log.d(TAG,"Data: '" + str_data + "'");
+        
         for(int i = 0; i < str_data.length(); i++){
             if(str_data.substring(i,i+1).equals("t")){
                 for(int j = i; j < str_data.length(); j++){
@@ -447,11 +445,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void action_button(View v) {
+        String msg;
         if(bluetoothAdapter.isEnabled()) {
-            Toast.makeText(getApplicationContext(), res.getString(R.string.msg_bt_connecting), Toast.LENGTH_SHORT).show();
+            msg = res.getString(R.string.msg_bt_connecting);
             connectToPairedDevice();
         } else {
-            Toast.makeText(getApplicationContext(), res.getString(R.string.msg_bt_turn_on_bt), Toast.LENGTH_LONG).show();
+            msg = res.getString(R.string.msg_bt_turn_on_bt);
         }
+
+        Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG).show();
     }
 }
