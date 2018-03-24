@@ -2,16 +2,16 @@
 <resources>
 
     <!-- COLOR SET -->
-    <color name="color_primary_light">#6abf69</color>
-    <color name="color_primary">#388e3c</color>
-    <color name="color_primary_dark">#00600f</color>
+    <color name="color_primary_light">#b2fab4</color>
+    <color name="color_primary">#81c784</color>
+    <color name="color_primary_dark">#519657</color>
 
-    <color name="color_secondary_light">#c158dc</color>
-    <color name="color_secondary">#8e24aa</color>
-    <color name="color_secondary_dark">#5c007a</color>
+    <color name="color_secondary_light">#ee98fb</color>
+    <color name="color_secondary">#ba68c8</color>
+    <color name="color_secondary_dark">#883997</color>
 
-    <color name="colorActivityBackground">#ffffff</color>
-    <color name="colorTableLight">#dedede</color>
+    <color name="colorActivityBackground">#f1f1f1</color>
+    <color name="colorTableLight">#e7e7e7</color>
     <color name="colorText">#131313</color>
 
     <!--Switch Colors-->

@@ -6,16 +6,32 @@
     tools:context="project.group.remotegreenhouse.MainActivity"
     tools:showIn="@layout/activity_main" android:background="@color/colorActivityBackground">
 
-    <LinearLayout style="@style/Container.Vertical">
-        <TextView android:id="@+id/tw_LEDState" style="@style/Label.Title"
-            android:layout_width="match_parent" android:textAlignment="center"/>
 
-        <SeekBar android:id="@+id/sb_LEDState" android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
 
-    </LinearLayout>
+    <TabHost xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/tabHost"
+        android:layout_width="match_parent" android:layout_height="match_parent" >
 
-    <TableLayout android:id="@+id/table" android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        <LinearLayout android:orientation="vertical" android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <HorizontalScrollView android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:fillViewport="true" android:scrollbars="none">
+
+                <TabWidget android:id="@android:id/tabs" android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" android:background="@color/color_primary" />
+            </HorizontalScrollView>
+
+            <FrameLayout android:id="@android:id/tabcontent" android:layout_width="match_parent"
+                android:layout_height="match_parent" >
+
+                <include layout="@layout/tab_overview" android:id="@+id/content_overview"/>
+                <include layout="@layout/tab_brightness" android:id="@+id/content_brightness"/>
+
+            </FrameLayout>
+
+        </LinearLayout>
+    </TabHost>
+
+
 
 </LinearLayout>

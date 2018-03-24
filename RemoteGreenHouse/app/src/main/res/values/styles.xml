@@ -29,6 +29,7 @@
         <item name="colorControlNormal">@color/colorTableLight</item>
         <item name="colorControlActivated">@color/colorTableLight</item>
         <item name="colorControlHighlight">@color/colorTableLight</item>
+        <item name="android:elevation">0dp</item>
     </style>
     <style name="Container.Horizontal">
         <item name="android:layout_width">match_parent</item>

@@ -18,6 +18,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.SeekBar;
+import android.widget.TabHost;
 import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -26,7 +27,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Set;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements
+        TabHost.OnTabChangeListener {
+
     private static final String TAG = MainActivity.class.getSimpleName(); // TAG for logging data
     private static final int REQUEST_ENABLE_BT = 1;         // Code for Enable_Request
     private Resources res;                                  // Using resources directory
@@ -56,6 +59,7 @@ public class MainActivity extends AppCompatActivity {
     // 0 temperature, 1 humidity, 2 pressure, 3 brightness, 4 moisture,
     private String tableIdentifiers[];
     private double tableValues[];
+    private TabHost tabHost;
 
     private class SeekbarListener implements SeekBar.OnSeekBarChangeListener {
         @Override public void onStartTrackingTouch(SeekBar seekBar) {}
@@ -77,6 +81,8 @@ public class MainActivity extends AppCompatActivity {
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        initializeTabHost();
 
         // Prepare and set receiver for bluetooth actions
         IntentFilter filter = new IntentFilter();
@@ -141,6 +147,27 @@ public class MainActivity extends AppCompatActivity {
         }
         return true;
     }
+    @Override public void    onTabChanged(String tabId) {
+
+        //unselected
+        for(int i=0; i<tabHost.getTabWidget().getChildCount(); i++) {
+            tabHost.getTabWidget().getChildAt(i).setBackgroundColor(
+                    res.getColor(R.color.color_primary_dark));
+
+            ((TextView) tabHost.getTabWidget().getChildAt(i)
+                    .findViewById(android.R.id.title))
+                    .setTextColor(res.getColor(R.color.colorActivityBackground));
+        }
+
+        // selected
+        tabHost.getTabWidget().getChildAt(tabHost.getCurrentTab())
+                .setBackgroundColor(res.getColor(R.color.colorActivityBackground));
+
+        ((TextView) tabHost.getTabWidget().getChildAt(tabHost.getCurrentTab())
+                .findViewById(android.R.id.title))
+                .setTextColor(res.getColor(R.color.color_primary_dark));
+    }
+
     /*---------------------------
       -----Additional Methods-----
       ---------------------------*/
@@ -380,5 +407,48 @@ public class MainActivity extends AppCompatActivity {
         }
 
         Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG).show();
+    }
+
+    private void initializeTabHost() {
+        tabHost = findViewById(R.id.tabHost);
+        tabHost.setup();
+
+        String tabText[] = {
+                res.getString(R.string.label_overview),
+                res.getString(R.string.label_brightness)
+        };
+        int layoutIds[] = {
+                R.id.content_overview,
+                R.id.content_brightness,
+        };
+
+        for (int i=0; i<tabText.length; i++) {
+            tabHost.addTab(
+                    makeTab(
+                            tabText[i],
+                            layoutIds[i]
+                    )
+            );
+
+            tabHost.getTabWidget().getChildAt(i).setBackgroundColor(
+                    res.getColor(R.color.color_primary_dark)); //selected
+
+            ((TextView) tabHost.getTabWidget().getChildAt(i)
+                    .findViewById(android.R.id.title))
+                    .setTextColor(res.getColor(R.color.colorActivityBackground));
+        }
+
+        tabHost.setOnTabChangedListener(MainActivity.this);
+        tabHost.getTabWidget().getChildAt(0).setBackgroundColor(
+                res.getColor(R.color.colorActivityBackground)); //selected
+
+        ((TextView) tabHost.getTabWidget().getChildAt(tabHost.getCurrentTab())
+                .findViewById(android.R.id.title))
+                .setTextColor(res.getColor(R.color.color_primary_dark));
+    }
+    private TabHost.TabSpec makeTab(String tabText, int contentId) {
+        TabHost.TabSpec tab = tabHost.newTabSpec(tabText);
+        tab.setIndicator(tab.getTag()).setContent(contentId);
+        return tab;
     }
 }

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/Container" android:paddingTop="@dimen/default_activity_padding">
+
+    <LinearLayout style="@style/Container.Vertical">
+        <TextView android:id="@+id/tw_LEDState" style="@style/Label.Title"
+            android:layout_width="match_parent" android:textAlignment="center"/>
+
+        <SeekBar android:id="@+id/sb_LEDState" android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+    </LinearLayout>
+</LinearLayout>
