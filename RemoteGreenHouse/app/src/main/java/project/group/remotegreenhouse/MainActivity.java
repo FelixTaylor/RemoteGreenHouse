@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Resources;
+import android.nfc.Tag;
 import android.os.Handler;
 import android.os.ParcelUuid;
 import android.support.v7.app.AppCompatActivity;
@@ -25,6 +26,7 @@ import android.widget.Toast;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Date;
 import java.util.Set;
 
 public class MainActivity extends AppCompatActivity implements
@@ -68,8 +70,10 @@ public class MainActivity extends AppCompatActivity implements
         }
         @Override public void onStopTrackingTouch(SeekBar seekBar) {
             if(bluetoothAdapter.isEnabled() && outputStream != null) {
-                String sendString = "x" + Integer.toString(sb_LEDLightControl.getProgress());
+                String sendString = "x" + Integer.toString(sb_LEDLightControl.getProgress()) + getTime();
+                Log.d(TAG, "Sending: '" + sendString + "'");
                 serialWrite(sendString);
+
             }
         }
     }
@@ -228,7 +232,9 @@ public class MainActivity extends AppCompatActivity implements
                         }
 
                         beginListenForData();                                                                   // Create a communication thread
-                        serialWrite("w");
+                        String sendString = "w" + getTime();
+                        Log.d(TAG, "Sending: '" + sendString + "'");
+                        serialWrite(sendString);
                     }
                 }
 
@@ -298,7 +304,9 @@ public class MainActivity extends AppCompatActivity implements
                 while(!Thread.currentThread().isInterrupted() && !stopWorker){
                     // synchronize sensor tableValues every 5 seconds
                     if(System.currentTimeMillis() - thread_pastMillis > 5000){
-                        serialWrite("w");
+                        String sendString = "w" + getTime();
+                        Log.d(TAG, "Sending: '" + sendString + "'");
+                        serialWrite(sendString);
                         thread_pastMillis = System.currentTimeMillis();
                     }
                     // read from input stream
@@ -446,9 +454,34 @@ public class MainActivity extends AppCompatActivity implements
                 .findViewById(android.R.id.title))
                 .setTextColor(res.getColor(R.color.color_primary_dark));
     }
+
     private TabHost.TabSpec makeTab(String tabText, int contentId) {
         TabHost.TabSpec tab = tabHost.newTabSpec(tabText);
         tab.setIndicator(tab.getTag()).setContent(contentId);
         return tab;
+    }
+
+    private String getTime(){
+        String str_sec;
+        String str_min;
+        String str_hrs;
+        Date date = new Date();
+        if(date.getHours() < 10){
+            str_hrs = "0" + date.getHours();
+        }else{
+            str_hrs = Integer.toString(date.getHours());
+        }
+        if(date.getMinutes() < 10){
+            str_min = "0" + date.getMinutes();
+        }else{
+            str_min = Integer.toString(date.getMinutes());
+        }
+        if(date.getSeconds() < 10){
+            str_sec = "0" + date.getSeconds();
+        }else{
+            str_sec = Integer.toString(date.getSeconds());
+        }
+        String str_date = str_hrs + str_min + str_sec;
+        return str_date;
     }
 }

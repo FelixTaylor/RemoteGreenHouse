@@ -5,7 +5,6 @@
 #include <BH1750FVI.h>
 
 // Pin declaration
-#define DHTTYPE DHT22
 #define dht_terra_pin 4
 #define dht_air_pin 5
 #define relay1_pin 6
@@ -16,25 +15,23 @@
 #define mosfet_fan_pin 11
 
 // function declaration
+void updateTime();
 void setLEDlevel(int val);
-int getPressure();
-double getTemperature();
-float getHumidity();
-uint16_t getLightIntensity();
 String readComPort();
 String convert_ASCII_Code(int mASCII);
-double getWaterContent();
+float getWaterContent();
 void initializeVariables();
 void initializePins();
 void displayStartMessage();
 void displayPressBright();
 void displayTempHum();
+void readTime(String str);
 
 // object setup
 Adafruit_BMP085 barometer;                  //Barometer BMP180
 Adafruit_SSD1306 display(4);                //Display 
-DHT dht_air(dht_air_pin, DHTTYPE);          //DHT22 Luftsensor an Pin D5
-DHT dht_terra(dht_terra_pin, DHTTYPE);      //DHT22 Bodensensor an Pin D4
+DHT dht_air(dht_air_pin, DHT22);            //DHT22 Luftsensor an Pin D5
+DHT dht_terra(dht_terra_pin, DHT22);        //DHT22 Bodensensor an Pin D4
 BH1750FVI lightSensor;                      //Lichtesensorobjekt
 
 // parameter declaration
@@ -46,13 +43,15 @@ boolean b_LED_state;        // State of the LED Stripes       (True: ON, False: 
 int     i_LED_level;        // brightness of the LED Stripes  (0% - 100%)
 int     i_fan_level;        // state of the fan               (0: off, 1: partial load, 2: full load)
 int     val_pressure;       // pressure value                 [Pa]
-long    val_brightness;     // brightness value               [lux]
-double  val_temperature;    // temperature value              [°C]
+int     val_brightness;     // brightness value               [lux]
+float   val_temperature;    // temperature value              [°C]
 float   val_humidity;       // humidity value                 [%]
 float   val_moisture;       // moisture value                 [%]
 String  readString;         // read data of the serial input
 //String  temperatureLimiter, humidityLimiter, pressureLimiter, moistureLimiter, brightnessLimiter, lightlevelLimiter, fanlevelLimiter;
 String  limiterByte;        // limiter Byte for serial communication
+long    lastTime;           // last time in millis            [ms]
+long    milliTimer;         // millis since time has been synchronized
 
 void setup() {
   /* 
@@ -75,8 +74,7 @@ void setup() {
    */
   //Barometer Setup()
   if (!barometer.begin()) {
-  Serial.println("Could not find a valid BMP085 sensor, check wiring!");
-  while (1) {}
+    Serial.println("Could not find a valid BMP085 sensor, check wiring!");
   }
   
   //lightSensor Setup()
@@ -97,15 +95,16 @@ void setup() {
 void loop() {
   // take sensor inputs
   curMillis         = millis();
-  val_temperature   = getTemperature();             // measure val_temperature
-  val_humidity      = getWaterContent();            // measure val_humidity
-  val_pressure      = getPressure();                // measure val_pressure
-  val_moisture      = 0;                            // until there is a moisture sensor
-  val_brightness    = getLightIntensity();          // measure brightness
+  val_temperature   = dht_air.readTemperature();            // measure val_temperature
+  val_humidity      = getWaterContent();                    // measure val_humidity
+  val_pressure      = (barometer.readPressure()+1158)/100;  // measure val_pressure
+  val_moisture      = 0;                                    // until there is a moisture sensor
+  val_brightness    = lightSensor.GetLightIntensity();      // measure brightness
   
   // Read SerialData if serial is available
-  readString    = readComPort();
-
+  while(Serial.available()){    
+    readString = readComPort();
+  }
   // evaluate incoming data
   if(readString.length() > 0){
     //    w[199]: send sensor values
@@ -113,30 +112,49 @@ void loop() {
     //    y[121]: set fan state
     //    z[122]: set pump state
     int iType = readString[0];
-    //w[199] send sensor values
+    //w[119] send sensor values
     if(iType == 119){
+      readTime(readString); 
       String sSendString = val_temperature + limiterByte + val_humidity + limiterByte + val_pressure + limiterByte + val_moisture + limiterByte + val_brightness + limiterByte + i_LED_level + limiterByte + i_fan_level + limiterByte;
       Serial.println(sSendString);
       sSendString = "";
     }
     //x[120] set LED state
     else if(iType == 120){
+      readTime(readString); 
       i_LED_level = (convert_ASCII_Code(readString[1])+convert_ASCII_Code(readString[2])+convert_ASCII_Code(readString[3])).toInt();
       if(i_LED_level > 100)i_LED_level = 100;
       setLEDlevel(i_LED_level);
     }
     //y[121] set fan state
     else if(iType == 121){
-      
+      readTime(readString);      
     }
     //z[122] set pump state
     else if(iType == 122){
-      
+      readTime(readString);
+      if(readString[1] == 1){             // turn on pump  
+        digitalWrite(relay1_pin, HIGH);
+      }
+      else if(readString[1] == 2){
+        digitalWrite(relay1_pin, LOW);    // turn off pump
+      }
     }
     iType = 0;
     readString = "";
   }
-
+/*
+ * --Debug--
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setCursor(0,5);
+  int hours = lastTime/3600000;
+  int minut = (lastTime-hours*3600000)/60000;
+  String printString = "Time: " + String(hours) + ":" + String(minut);
+  display.println(printString);
+  prevMillis = millis();
+  display.display();*/
+  
   // display the current sensor values
   if(curMillis - prevMillis < delayMillis){
     displayPressBright();
@@ -147,6 +165,7 @@ void loop() {
   else{
     prevMillis = millis();
   }
+  updateTime();
 }
 
 
@@ -154,38 +173,44 @@ void loop() {
 // ------------- Functions -------------
 // -------------------------------------
 
+void updateTime(){
+  if(lastTime > 86400000){
+    lastTime = 0;
+  }
+  else{
+    lastTime = lastTime + millis() - milliTimer;
+    milliTimer = millis();    
+  }
+}
+
+void readTime(String str){
+  lastTime = 0;
+  int pos = str.length()-1;
+  int secs = convert_ASCII_Code(str[pos-1]).toInt()*10 + convert_ASCII_Code(str[pos]).toInt();
+  int mins = convert_ASCII_Code(str[pos-3]).toInt()*10 + convert_ASCII_Code(str[pos-2]).toInt();
+  int hrs  = convert_ASCII_Code(str[pos-5]).toInt()*10 + convert_ASCII_Code(str[pos-4]).toInt();
+  /*
+  int secs = (convert_ASCII_Code(str[pos-4])+convert_ASCII_Code(str[pos-3])).toInt();
+  int mins = (convert_ASCII_Code(str[pos-6])+convert_ASCII_Code(str[pos-5])).toInt();
+  int hrs  = (convert_ASCII_Code(str[pos-8])+convert_ASCII_Code(str[pos-7])).toInt();
+  */
+  lastTime = secs*1000 + mins*60000 + hrs*3600000;
+}
+
 void setLEDlevel(int val){
-  double lightValue = val*2.55;
-  analogWrite(mosfet_led_pin,lightValue);
+  analogWrite(mosfet_led_pin,val*2.55);
 }
 
-int getPressure(){
-  return (barometer.readPressure()+1158)/100;   //1158 = 9.81kg/m³ * 118m (bielefeld altitude)
-}
-
-double getTemperature(){
-  return dht_air.readTemperature();
-}
-
-float getHumidity(){
-  return dht_air.readHumidity();
-}
-
-uint16_t getLightIntensity(){
-  return lightSensor.GetLightIntensity();
+void setPump(int mTime){
+  long daytime = 86400000;
 }
 
 void displayTempHum(){
   display.clearDisplay();
   display.setTextSize(1);
   display.setCursor(0,5);
-  display.print("Temp: ");
-  display.print(val_temperature);
-  display.println(" *C");
-  display.println("");
-  display.print("Hum: ");
-  display.print(val_humidity);
-  display.print(" g/kg");
+  String printString = "Temp: " + String(val_temperature) + " *C \n\nHum: "  + String(val_humidity) + " g/kg";
+  display.println(printString);
   display.display();
 }
 
@@ -193,29 +218,22 @@ void displayPressBright(){
   display.clearDisplay();
   display.setTextSize(1);
   display.setCursor(0,5);
-  display.print("Bright: ");
-  display.print(val_brightness);
-  display.println(" lux");
-  display.println("");
-  display.print("Pres: ");
-  display.print(val_pressure);
-  display.print(" hPa");
+  String printString = "Bright: " + String(val_brightness) + " lux \n\nPres: " + String(val_pressure) + " hPa";
+  display.println(printString);
   display.display();
 }
 
 void displayStartMessage(){
   display.setCursor(0,0);
   display.setTextSize(2);
-  display.println("Remoted");
-  display.println("GreenHouse");
+  display.println("Remoted \nGreenHouse");
   display.display();
   delay(5000);
 }
 
-double getWaterContent(){
-  double  pws = 6.11657*exp(17.2799-(4102.99/(dht_air.readTemperature()+237.431)));
-  double  mw = 1000*0.622*pws/(1013.25*100/dht_air.readHumidity() - pws);
-  return mw;
+float getWaterContent(){
+  float  pws = 6.11657*exp(17.2799-(4102.99/(dht_air.readTemperature()+237.431)));
+  return 1000*0.622*pws/(1013.25*100/dht_air.readHumidity() - pws);
 }
 
 String readComPort(){
@@ -256,6 +274,8 @@ void initializeVariables(){
   readString                = "";
   prevMillis                = millis();
   delayMillis               = 5000;
+  milliTimer                = millis();
+  lastTime                  = 0;
 }
 
 void initializePins(){
