@@ -3,11 +3,30 @@
     style="@style/Container" android:paddingTop="@dimen/default_activity_padding">
 
     <LinearLayout style="@style/Container.Vertical">
-        <TextView android:id="@+id/tw_LEDState" style="@style/Label.Title"
+        <TextView android:id="@+id/tv_LEDState" style="@style/Label.Title"
             android:layout_width="match_parent" android:textAlignment="center"/>
 
         <SeekBar android:id="@+id/sb_LEDState" android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
+        <LinearLayout style="@style/Container.Horizontal">
+            <TextView android:layout_weight="1" android:text="@string/label_lighton"
+                android:layout_width="0dp" android:layout_height="wrap_content"/>
+
+            <TextView android:id="@+id/tv_lightOnTime"
+                android:layout_weight="1"               android:text="@string/val_initial_time"
+                android:layout_height="wrap_content"    android:layout_width="0dp"
+                android:onClick="lightOnClick"/>
+        </LinearLayout>
+
+        <LinearLayout style="@style/Container.Horizontal">
+            <TextView android:layout_weight="1" android:text="@string/label_lightoff"
+                android:layout_width="0dp" android:layout_height="wrap_content"/>
+
+            <TextView android:id="@+id/tv_lightOffTime"
+                android:layout_weight="1"               android:text="@string/val_initial_time"
+                android:layout_height="wrap_content"    android:layout_width="0dp"
+                android:onClick="lightOffClick"         android:clickable="true"/>
+        </LinearLayout>
     </LinearLayout>
 </LinearLayout>

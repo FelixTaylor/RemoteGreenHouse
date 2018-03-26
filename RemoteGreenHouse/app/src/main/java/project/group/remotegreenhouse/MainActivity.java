@@ -1,4 +1,5 @@
 package project.group.remotegreenhouse;
+import android.app.TimePickerDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
@@ -13,6 +14,7 @@ import android.os.ParcelUuid;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.text.format.DateUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -22,11 +24,14 @@ import android.widget.SeekBar;
 import android.widget.TabHost;
 import android.widget.TableLayout;
 import android.widget.TextView;
+import android.widget.TimePicker;
 import android.widget.Toast;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.Set;
 
 public class MainActivity extends AppCompatActivity implements
@@ -43,16 +48,17 @@ public class MainActivity extends AppCompatActivity implements
     private byte[] readBuffer;                              // Serial Buffer
     private int readBufferPosition;                         // Current pointer position for data reading
     private int readLimiterPosition;                        // Current pointer position for searching limiter characters
-    private int it_getValues;                   // Iterator in getSensorValues
+    private int it_getValues;                               // Iterator in getSensorValues
 
     private InputStream inputStream;                        // Bluetooth communication Inputsream
     private long thread_pastMillis;                         // last send data time
     private OutputStream outputStream;                      // Bluetooth communication Outputstream
     private SeekBar sb_LEDLightControl;                     // SeekBar to control the LED Stripes
     private Set<BluetoothDevice> pairedDevices;             // Set of paired bluetooth devices
-    private TextView tv_ValueLEDState;
+    private TextView tv_ValueLEDState, tv_lightOnTime, tv_lightOffTime;
     private Thread workerThread;                            // Thread for bluetooth data stream
-    private double val_temperature, val_pressure, val_brightness, val_humidity, val_moisture, val_LED_state, val_fan_state;
+    private int val_LED_state;
+    private String time_led_on, time_led_off;
     private double sensorValues[];
 
     private LayoutInflater inflater;
@@ -62,6 +68,7 @@ public class MainActivity extends AppCompatActivity implements
     private String tableIdentifiers[];
     private double tableValues[];
     private TabHost tabHost;
+    private TimePickerDialog timePickerDialog;
 
     private class SeekbarListener implements SeekBar.OnSeekBarChangeListener {
         @Override public void onStartTrackingTouch(SeekBar seekBar) {}
@@ -70,12 +77,46 @@ public class MainActivity extends AppCompatActivity implements
         }
         @Override public void onStopTrackingTouch(SeekBar seekBar) {
             if(bluetoothAdapter.isEnabled() && outputStream != null) {
-                String sendString = "x" + Integer.toString(sb_LEDLightControl.getProgress()) + getTime();
-                Log.d(TAG, "Sending: '" + sendString + "'");
-                serialWrite(sendString);
-
+                val_LED_state = sb_LEDLightControl.getProgress();
+                sendData();
             }
         }
+    }
+
+    public void lightOnClick(View v){
+        Calendar calendar = Calendar.getInstance();
+        timePickerDialog = new TimePickerDialog(MainActivity.this, new TimePickerDialog.OnTimeSetListener() {
+            @Override
+            public void onTimeSet(TimePicker timePicker, int i, int i1) {
+                Calendar timeCalendar = Calendar.getInstance();
+                timeCalendar.set(Calendar.HOUR_OF_DAY, i);
+                timeCalendar.set(Calendar.MINUTE, i1);
+                String timeString = DateUtils.formatDateTime(MainActivity.this,timeCalendar.getTimeInMillis(),DateUtils.FORMAT_SHOW_TIME);
+                tv_lightOnTime.setText(timeString);
+                timeString = Integer.toString(i*3600000+i1*60000);
+                time_led_on = timeString;
+                sendData();
+            }
+        },calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), true);
+        timePickerDialog.show();
+    }
+
+    public void lightOffClick(View v){
+        Calendar calendar = Calendar.getInstance();
+        timePickerDialog = new TimePickerDialog(MainActivity.this, new TimePickerDialog.OnTimeSetListener() {
+            @Override
+            public void onTimeSet(TimePicker timePicker, int i, int i1) {
+                Calendar timeCalendar = Calendar.getInstance();
+                timeCalendar.set(Calendar.HOUR_OF_DAY, i);
+                timeCalendar.set(Calendar.MINUTE, i1);
+                String timeString = DateUtils.formatDateTime(MainActivity.this,timeCalendar.getTimeInMillis(),DateUtils.FORMAT_SHOW_TIME);
+                tv_lightOffTime.setText(timeString);
+                timeString = Integer.toString(i*3600000+i1*60000);
+                time_led_off = timeString;
+                sendData();
+            }
+        },calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), true);
+        timePickerDialog.show();
     }
 
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,7 +135,9 @@ public class MainActivity extends AppCompatActivity implements
         this.registerReceiver(mReceiver, filter);
 
         sb_LEDLightControl = findViewById(R.id.sb_LEDState);
-        tv_ValueLEDState   = findViewById(R.id.tw_LEDState);
+        tv_ValueLEDState   = findViewById(R.id.tv_LEDState);
+        tv_lightOnTime     = findViewById(R.id.tv_lightOnTime);
+        tv_lightOffTime    = findViewById(R.id.tv_lightOffTime);
         table              = findViewById(R.id.table);
 
         // Initialize Values
@@ -107,6 +150,7 @@ public class MainActivity extends AppCompatActivity implements
         sb_LEDLightControl.setProgress(0);
         tv_ValueLEDState.setText(Integer.toString(sb_LEDLightControl.getProgress()));
         b_isInitialized = false;
+
 
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         sb_LEDLightControl.setOnSeekBarChangeListener(new SeekbarListener());
@@ -232,7 +276,7 @@ public class MainActivity extends AppCompatActivity implements
                         }
 
                         beginListenForData();                                                                   // Create a communication thread
-                        String sendString = "w" + getTime();
+                        String sendString = "w" + getTime() + ";";
                         Log.d(TAG, "Sending: '" + sendString + "'");
                         serialWrite(sendString);
                     }
@@ -304,7 +348,7 @@ public class MainActivity extends AppCompatActivity implements
                 while(!Thread.currentThread().isInterrupted() && !stopWorker){
                     // synchronize sensor tableValues every 5 seconds
                     if(System.currentTimeMillis() - thread_pastMillis > 5000){
-                        String sendString = "w" + getTime();
+                        String sendString = "w" + getTime() + ";";
                         Log.d(TAG, "Sending: '" + sendString + "'");
                         serialWrite(sendString);
                         thread_pastMillis = System.currentTimeMillis();
@@ -325,6 +369,7 @@ public class MainActivity extends AppCompatActivity implements
                                     handler.post(new Runnable(){
                                         public void run(){
                                             // evaluate the incoming data string
+                                            Log.d(TAG,"data: '" + data + "'");
                                             getValuesFromData(data);
                                             //setTableValues();
                                             updateTable();
@@ -352,7 +397,6 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     private void getValuesFromData(String str_data){
-        Log.d(TAG,"Data: '" + str_data + "'");
         it_getValues = 0;
         for(int i=0; i<sensorValues.length; i++){
             sensorValues[i] = getSensorValues(str_data);
@@ -462,26 +506,15 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     private String getTime(){
-        String str_sec;
-        String str_min;
-        String str_hrs;
-        Date date = new Date();
-        if(date.getHours() < 10){
-            str_hrs = "0" + date.getHours();
-        }else{
-            str_hrs = Integer.toString(date.getHours());
-        }
-        if(date.getMinutes() < 10){
-            str_min = "0" + date.getMinutes();
-        }else{
-            str_min = Integer.toString(date.getMinutes());
-        }
-        if(date.getSeconds() < 10){
-            str_sec = "0" + date.getSeconds();
-        }else{
-            str_sec = Integer.toString(date.getSeconds());
-        }
-        String str_date = str_hrs + str_min + str_sec;
-        return str_date;
+        Calendar calendar = Calendar.getInstance();
+        calendar.getTime();
+        return Integer.toString(3600000*calendar.get(Calendar.HOUR_OF_DAY)+60000*calendar.get(Calendar.MINUTE)+1000*calendar.get(Calendar.SECOND));
+    }
+
+    private void sendData(){
+        //send: xtime;ledValue;ledOnTime;ledOffTime;
+        String sendString = "x" + getTime() + ";" + val_LED_state + ";" + time_led_on + ";" + time_led_off + ";";
+        Log.d(TAG, "Sendstring: '" + sendString + "'");
+        serialWrite(sendString);
     }
 }

@@ -5,7 +5,6 @@
 #include <BH1750FVI.h>
 
 // Pin declaration
-#define dht_terra_pin 4
 #define dht_air_pin 5
 #define relay1_pin 6
 #define relay2_pin 7
@@ -15,6 +14,7 @@
 #define mosfet_fan_pin 11
 
 // function declaration
+void updateLight();
 void updateTime();
 void setLEDlevel(int val);
 String readComPort();
@@ -25,13 +25,12 @@ void initializePins();
 void displayStartMessage();
 void displayPressBright();
 void displayTempHum();
-void readTime(String str);
+void readTime();
 
 // object setup
 Adafruit_BMP085 barometer;                  //Barometer BMP180
 Adafruit_SSD1306 display(4);                //Display 
 DHT dht_air(dht_air_pin, DHT22);            //DHT22 Luftsensor an Pin D5
-DHT dht_terra(dht_terra_pin, DHT22);        //DHT22 Bodensensor an Pin D4
 BH1750FVI lightSensor;                      //Lichtesensorobjekt
 
 // parameter declaration
@@ -39,8 +38,10 @@ unsigned long curMillis;
 unsigned long prevMillis;
 unsigned long delayMillis;
 
-boolean b_LED_state;        // State of the LED Stripes       (True: ON, False: OFF)
-int     i_LED_level;        // brightness of the LED Stripes  (0% - 100%)
+long controlValues[3];     // State variables: 
+                              //[0]: brightness of the LED Stripes  (0% - 100%)
+                              //[1]: time when light turns on       [ms] since 00:00:00
+                              //[2]: time whe light turns off       [ms] since 00:00:00
 int     i_fan_level;        // state of the fan               (0: off, 1: partial load, 2: full load)
 int     val_pressure;       // pressure value                 [Pa]
 int     val_brightness;     // brightness value               [lux]
@@ -48,9 +49,8 @@ float   val_temperature;    // temperature value              [°C]
 float   val_humidity;       // humidity value                 [%]
 float   val_moisture;       // moisture value                 [%]
 String  readString;         // read data of the serial input
-//String  temperatureLimiter, humidityLimiter, pressureLimiter, moistureLimiter, brightnessLimiter, lightlevelLimiter, fanlevelLimiter;
 String  limiterByte;        // limiter Byte for serial communication
-long    lastTime;           // last time in millis            [ms]
+long    currentTime;        // current daytime in millis      [ms]
 long    milliTimer;         // millis since time has been synchronized
 
 void setup() {
@@ -62,7 +62,6 @@ void setup() {
   Wire.begin(0x77);                           //Starte I²C des Barometers (0x77)
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);  //Starte I²C des Displays (0x3C)
   dht_air.begin();                            //Starte Luftsensor
-  dht_terra.begin();                          //Starte Bodensensor
   lightSensor.begin();                        //Starte lightSensor
   lightSensor.SetAddress(0x23);               //I²C Adresse des Sensors
   Serial.begin(9600);
@@ -74,7 +73,6 @@ void setup() {
    */
   //Barometer Setup()
   if (!barometer.begin()) {
-    Serial.println("Could not find a valid BMP085 sensor, check wiring!");
   }
   
   //lightSensor Setup()
@@ -92,7 +90,7 @@ void setup() {
 
 }
 
-void loop() {
+void loop() {  
   // take sensor inputs
   curMillis         = millis();
   val_temperature   = dht_air.readTemperature();            // measure val_temperature
@@ -101,60 +99,38 @@ void loop() {
   val_moisture      = 0;                                    // until there is a moisture sensor
   val_brightness    = lightSensor.GetLightIntensity();      // measure brightness
   
-  // Read SerialData if serial is available
   while(Serial.available()){    
     readString = readComPort();
   }
-  // evaluate incoming data
   if(readString.length() > 0){
-    //    w[199]: send sensor values
-    //    x[120]: set LED state
-    //    y[121]: set fan state
-    //    z[122]: set pump state
-    int iType = readString[0];
-    //w[119] send sensor values
-    if(iType == 119){
-      readTime(readString); 
-      String sSendString = val_temperature + limiterByte + val_humidity + limiterByte + val_pressure + limiterByte + val_moisture + limiterByte + val_brightness + limiterByte + i_LED_level + limiterByte + i_fan_level + limiterByte;
+    int iType = readString[0];  // read request
+    readString.remove(0,1);     // remove iType from readString
+    readTime();                 // read time from readString and remove it incl limiter Byte ;
+    if(iType == 119){           // w[119] get request from android device
+      String sSendString = val_temperature + limiterByte + val_humidity + limiterByte + val_pressure + limiterByte + val_moisture + limiterByte + val_brightness + limiterByte + controlValues[0] + limiterByte + i_fan_level + limiterByte;
       Serial.println(sSendString);
       sSendString = "";
     }
-    //x[120] set LED state
-    else if(iType == 120){
-      readTime(readString); 
-      i_LED_level = (convert_ASCII_Code(readString[1])+convert_ASCII_Code(readString[2])+convert_ASCII_Code(readString[3])).toInt();
-      if(i_LED_level > 100)i_LED_level = 100;
-      setLEDlevel(i_LED_level);
-    }
-    //y[121] set fan state
-    else if(iType == 121){
-      readTime(readString);      
-    }
-    //z[122] set pump state
-    else if(iType == 122){
-      readTime(readString);
-      if(readString[1] == 1){             // turn on pump  
-        digitalWrite(relay1_pin, HIGH);
-      }
-      else if(readString[1] == 2){
-        digitalWrite(relay1_pin, LOW);    // turn off pump
+    else if(iType == 120){      //x[120] set request from android device
+      //incoming data: LED_level, led_on_time, led_off_time -- seperated by ;
+      int limiterPosition = 0;
+      for(int i=0; i<(sizeof(controlValues)/sizeof(long)); i++){
+        for(int j=0; j<=readString.length(); j++){
+          if(readString[j] == 59){
+            limiterPosition = j;
+            goto fixpoint;
+          }
+        }
+        fixpoint:
+        String str = readString.substring(0,limiterPosition);
+        controlValues[i] = str.toInt();
+        readString.remove(0,limiterPosition+1);
+        limiterPosition = 0;
       }
     }
     iType = 0;
     readString = "";
-  }
-/*
- * --Debug--
-  display.clearDisplay();
-  display.setTextSize(1);
-  display.setCursor(0,5);
-  int hours = lastTime/3600000;
-  int minut = (lastTime-hours*3600000)/60000;
-  String printString = "Time: " + String(hours) + ":" + String(minut);
-  display.println(printString);
-  prevMillis = millis();
-  display.display();*/
-  
+  }  
   // display the current sensor values
   if(curMillis - prevMillis < delayMillis){
     displayPressBright();
@@ -165,6 +141,8 @@ void loop() {
   else{
     prevMillis = millis();
   }
+  
+  updateLight();
   updateTime();
 }
 
@@ -173,29 +151,35 @@ void loop() {
 // ------------- Functions -------------
 // -------------------------------------
 
-void updateTime(){
-  if(lastTime > 86400000){
-    lastTime = 0;
+void updateLight(){
+  if(currentTime >= controlValues[1] && currentTime <= controlValues[2]){
+    setLEDlevel(controlValues[0]);
   }
   else{
-    lastTime = lastTime + millis() - milliTimer;
+    setLEDlevel(0);
+  }
+}
+
+void updateTime(){
+  if(currentTime > 86400000){
+    currentTime = 0;
+  }
+  else{
+    currentTime = currentTime + millis() - milliTimer;
     milliTimer = millis();    
   }
 }
 
-void readTime(String str){
-  lastTime = 0;
-  int pos = str.length()-1;
-  int secs = convert_ASCII_Code(str[pos-1]).toInt()*10 + convert_ASCII_Code(str[pos]).toInt();
-  int mins = convert_ASCII_Code(str[pos-3]).toInt()*10 + convert_ASCII_Code(str[pos-2]).toInt();
-  int hrs  = convert_ASCII_Code(str[pos-5]).toInt()*10 + convert_ASCII_Code(str[pos-4]).toInt();
-  /*
-  int secs = (convert_ASCII_Code(str[pos-4])+convert_ASCII_Code(str[pos-3])).toInt();
-  int mins = (convert_ASCII_Code(str[pos-6])+convert_ASCII_Code(str[pos-5])).toInt();
-  int hrs  = (convert_ASCII_Code(str[pos-8])+convert_ASCII_Code(str[pos-7])).toInt();
-  */
-  lastTime = secs*1000 + mins*60000 + hrs*3600000;
-}
+void readTime(){
+  currentTime = 0;
+  for(int i=0; i<=readString.length(); i++){
+    if(readString[i] == 59){
+      currentTime = readString.substring(0,i).toInt();
+      readString.remove(0,i+1);
+      break;
+    }
+  }
+} 
 
 void setLEDlevel(int val){
   analogWrite(mosfet_led_pin,val*2.55);
@@ -238,6 +222,7 @@ float getWaterContent(){
 
 String readComPort(){
   while (Serial.available()) {
+    delay(1);
     if (Serial.available() >0) {
       char c = Serial.read();
       readString += c;
@@ -248,7 +233,7 @@ String readComPort(){
 
 String convert_ASCII_Code(int mASCII){
   String outString;
-   if (mASCII == 48) outString = "0";
+   if      (mASCII == 48) outString = "0";
    else if (mASCII == 49) outString = "1";
    else if (mASCII == 50) outString = "2";
    else if (mASCII == 51) outString = "3";
@@ -262,8 +247,9 @@ String convert_ASCII_Code(int mASCII){
 }
 
 void initializeVariables(){
-  b_LED_state               = false;
-  i_LED_level               = 0;
+  controlValues[0]         = 0;
+  controlValues[1]         = 0;
+  controlValues[2]         = 24*3600000;
   i_fan_level               = 0;
   val_brightness            = 0;
   val_pressure              = 0;
@@ -275,7 +261,7 @@ void initializeVariables(){
   prevMillis                = millis();
   delayMillis               = 5000;
   milliTimer                = millis();
-  lastTime                  = 0;
+  currentTime               = 0;
 }
 
 void initializePins(){
@@ -284,7 +270,6 @@ void initializePins(){
   pinMode(relay2_pin,     OUTPUT);
   pinMode(relay3_pin,     OUTPUT);
   pinMode(relay4_pin,     OUTPUT);
-  pinMode(dht_terra_pin,  INPUT);
   pinMode(dht_air_pin,    INPUT);
 
   // Set initial pin conditions
