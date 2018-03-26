@@ -9,6 +9,8 @@
     <string name="label_brightness">Brightness</string>
     <string name="label_pressure">Pressure</string>
     <string name="label_terraHumidity">Terra Humidity</string>
+    <string name="label_lighton">Licht an</string>
+    <string name="label_lightoff">Licht aus</string>
 
     <array name="array_label_identifiers">
         <item>@string/label_temperature</item>
@@ -35,7 +37,9 @@
     <string name="msg_bt_turn_on_bt">Please enable bluetooth to connect to a green house.</string>
     <string name="msg_no_device_found">No green house detected.</string>
 
+    <!--Values-->
     <string name="val_nan">NAN</string>
+    <string name="val_initial_time">00:00</string>
 
     <!--Physical Dimensions-->
     <string name="dim_pressure">%1$s hPa</string>
