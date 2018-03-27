@@ -8,7 +8,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Resources;
-import android.nfc.Tag;
 import android.os.Handler;
 import android.os.ParcelUuid;
 import android.support.v7.app.AppCompatActivity;
@@ -30,8 +29,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.Set;
 
 public class MainActivity extends AppCompatActivity implements
@@ -44,11 +41,10 @@ public class MainActivity extends AppCompatActivity implements
     private BluetoothDevice device;                         // Bluetooth device
     private BluetoothSocket bluetoothSocket;                // Bluetooth communication Socket
     private volatile boolean stopWorker;                    // Variable to stop the communication thread
-    private boolean b_isInitialized;                        // Set to true, if state got initialized data from arduino
     private byte[] readBuffer;                              // Serial Buffer
     private int readBufferPosition;                         // Current pointer position for data reading
     private int readLimiterPosition;                        // Current pointer position for searching limiter characters
-    private int it_getValues;                               // Iterator in getSensorValues
+    private int it_getValues;                               // Iterator in setSensorValues
 
     private InputStream inputStream;                        // Bluetooth communication Inputsream
     private long thread_pastMillis;                         // last send data time
@@ -57,9 +53,8 @@ public class MainActivity extends AppCompatActivity implements
     private Set<BluetoothDevice> pairedDevices;             // Set of paired bluetooth devices
     private TextView tv_ValueLEDState, tv_lightOnTime, tv_lightOffTime;
     private Thread workerThread;                            // Thread for bluetooth data stream
-    private int val_LED_state;
-    private String time_led_on, time_led_off;
     private double sensorValues[];
+    private double controlValues[];
 
     private LayoutInflater inflater;
     private TableLayout table;
@@ -77,7 +72,7 @@ public class MainActivity extends AppCompatActivity implements
         }
         @Override public void onStopTrackingTouch(SeekBar seekBar) {
             if(bluetoothAdapter.isEnabled() && outputStream != null) {
-                val_LED_state = sb_LEDLightControl.getProgress();
+                controlValues[0] = sb_LEDLightControl.getProgress();
                 sendData();
             }
         }
@@ -93,8 +88,7 @@ public class MainActivity extends AppCompatActivity implements
                 timeCalendar.set(Calendar.MINUTE, i1);
                 String timeString = DateUtils.formatDateTime(MainActivity.this,timeCalendar.getTimeInMillis(),DateUtils.FORMAT_SHOW_TIME);
                 tv_lightOnTime.setText(timeString);
-                timeString = Integer.toString(i*3600000+i1*60000);
-                time_led_on = timeString;
+                controlValues[1] = (double)(i*3600000+i1*60000);
                 sendData();
             }
         },calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), true);
@@ -111,8 +105,7 @@ public class MainActivity extends AppCompatActivity implements
                 timeCalendar.set(Calendar.MINUTE, i1);
                 String timeString = DateUtils.formatDateTime(MainActivity.this,timeCalendar.getTimeInMillis(),DateUtils.FORMAT_SHOW_TIME);
                 tv_lightOffTime.setText(timeString);
-                timeString = Integer.toString(i*3600000+i1*60000);
-                time_led_off = timeString;
+                controlValues[2] = (double)i*3600000+i1*1000;
                 sendData();
             }
         },calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), true);
@@ -141,7 +134,10 @@ public class MainActivity extends AppCompatActivity implements
         table              = findViewById(R.id.table);
 
         // Initialize Values
-        sensorValues = new double[7];
+        //SensorValues = {temp, hum, pressure, moisture, brightness}
+        sensorValues = new double[5];
+        //controlValues = {Led_state, Led_on_time, Led_off_time}
+        controlValues = new double[3];
         tableValues = new double[5];
         tableIdentifiers = res.getStringArray(R.array.array_label_identifiers);
         inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -149,12 +145,11 @@ public class MainActivity extends AppCompatActivity implements
         sb_LEDLightControl.setMax(100);
         sb_LEDLightControl.setProgress(0);
         tv_ValueLEDState.setText(Integer.toString(sb_LEDLightControl.getProgress()));
-        b_isInitialized = false;
 
 
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         sb_LEDLightControl.setOnSeekBarChangeListener(new SeekbarListener());
-        updateTable();
+        displaySensorValues();
     }
 
     @Override public boolean onPrepareOptionsMenu(Menu menu) {
@@ -214,6 +209,8 @@ public class MainActivity extends AppCompatActivity implements
         ((TextView) tabHost.getTabWidget().getChildAt(tabHost.getCurrentTab())
                 .findViewById(android.R.id.title))
                 .setTextColor(res.getColor(R.color.color_primary_dark));
+        displayControlValues();
+
     }
 
     /*---------------------------
@@ -276,7 +273,7 @@ public class MainActivity extends AppCompatActivity implements
                         }
 
                         beginListenForData();                                                                   // Create a communication thread
-                        String sendString = "w" + getTime() + ";";
+                        String sendString = "y" + getTime() + ";";
                         Log.d(TAG, "Sending: '" + sendString + "'");
                         serialWrite(sendString);
                     }
@@ -319,7 +316,6 @@ public class MainActivity extends AppCompatActivity implements
 
     void stopListenForData(){
         stopWorker = true;
-        b_isInitialized = false;
         //reset readBuffer
         readBufferPosition = 0;
         //reset tableValues and SeekBar
@@ -329,7 +325,7 @@ public class MainActivity extends AppCompatActivity implements
             tableValues[i] = 0.0;
         }
 
-        updateTable();
+        displaySensorValues();
     }
 
     void beginListenForData() {
@@ -369,10 +365,10 @@ public class MainActivity extends AppCompatActivity implements
                                     handler.post(new Runnable(){
                                         public void run(){
                                             // evaluate the incoming data string
-                                            Log.d(TAG,"data: '" + data + "'");
+                                            Log.d(TAG,"receiving: '" + data + "'");
                                             getValuesFromData(data);
                                             //setTableValues();
-                                            updateTable();
+                                            displaySensorValues();
                                         }
                                     });
                                 }
@@ -398,16 +394,24 @@ public class MainActivity extends AppCompatActivity implements
 
     private void getValuesFromData(String str_data){
         it_getValues = 0;
-        for(int i=0; i<sensorValues.length; i++){
-            sensorValues[i] = getSensorValues(str_data);
+        if(!str_data.substring(0,1).equals("s")){
+            for(int i=0; i<sensorValues.length; i++){
+                sensorValues[i] = getDataValue(str_data);
+            }
         }
-        if(!b_isInitialized){
-            sb_LEDLightControl.setProgress((int) val_LED_state);
-            b_isInitialized = true;
+        else{
+            for(int i=0; i<controlValues.length; i++){
+                controlValues[i] = getDataValue(str_data.substring(1,str_data.length()-1));
+                Log.d(TAG,"controlValue[" + i + "]" + controlValues[i]);
+            }
+            sb_LEDLightControl.setProgress((int)controlValues[0]);
+            tv_lightOnTime.setText(DateUtils.formatDateTime(MainActivity.this,(long)controlValues[1],DateUtils.FORMAT_SHOW_TIME));
+            tv_lightOffTime.setText(DateUtils.formatDateTime(MainActivity.this,(long)controlValues[2],DateUtils.FORMAT_SHOW_TIME));
         }
     }
 
-    private double getSensorValues(String str_data){
+    //gets the value between two limiter bytes
+    private double getDataValue(String str_data){
         double mDouble;
         int myInt = it_getValues;
         for(int j = it_getValues +1; j < str_data.length(); j++){
@@ -425,7 +429,7 @@ public class MainActivity extends AppCompatActivity implements
         return mDouble;
     }
 
-    private void updateTable() {
+    private void displaySensorValues() {
         table.removeAllViews();
         String valueInputs[] = new String[]{
                 res.getString(R.string.dim_temperature, String.valueOf(sensorValues[0])),
@@ -513,8 +517,18 @@ public class MainActivity extends AppCompatActivity implements
 
     private void sendData(){
         //send: xtime;ledValue;ledOnTime;ledOffTime;
-        String sendString = "x" + getTime() + ";" + val_LED_state + ";" + time_led_on + ";" + time_led_off + ";";
+        String sendString = "x" + getTime() + ";";
+        for(int i=0; i<controlValues.length; i++){
+            sendString += String.format("%.0f", controlValues[i]) + ";";
+        }
         Log.d(TAG, "Sendstring: '" + sendString + "'");
         serialWrite(sendString);
+    }
+
+    private void displayControlValues(){
+        sb_LEDLightControl.setProgress((int)controlValues[0]);
+        tv_lightOnTime.setText(DateUtils.formatDateTime(MainActivity.this,(long)controlValues[1],DateUtils.FORMAT_SHOW_TIME));
+        tv_lightOffTime.setText(DateUtils.formatDateTime(MainActivity.this,(long)controlValues[2],DateUtils.FORMAT_SHOW_TIME));
+        displaySensorValues();
     }
 }
