@@ -1,38 +1,15 @@
 Arduino:
 endByte: 	\n 	- ASCII 10
 
-receivedData:			limiterByte		ASCII
-	- sendValues()		w			119
-	- setLedState(i state)	x			120
-	- setFanState(i state)	y			121
-	- setPump(boolean b)	z			122
+receivedData:			CommandByte		ASCII
+	- get request		w			119
+		sendString:tval;hval;pval;mval;bval;\n
 
-sendData: Value			limiterBytes		ASCII
-	- temperature		t			116
-	- humidity		h			104
-	- pressure		p			112
-	- moisture		m			109
-	- brightness		b			98
-	- ledState		l			108
-	- fanState		f			102
+	- set request		x			120
+		receiveString:time;led_state;led_on_time;led_off_time;
 
-sendString: tvalhvalpvalmvalbvallvalfval\n
+	- synch request		y			121
+		sendString:sled_state;led_on_time;led_off_time;\n
 
-
-
-App:
-
-receivedData:			limiterByte		ASCII
-	- temperature		t			116
-	- humidity		h			104
-	- pressure		p			112
-	- moisture		m			109
-	- brightness		b			98
-	- ledState		l			108
-	- fanState		f			102
-
-sendData: Value			limiterBytes		ASCII
-	- getValues()		w			119
-	- setLedState(i state)	x			120
-	- setFanState(i state)	y			121
-	- setPump(i state)	z			122
+Androird stores the SensorValues in an array in the above mentioned "get request" order.
+Androird stores the ControlValues in an array in the above mentioned "synch request" order.

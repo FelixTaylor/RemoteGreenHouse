@@ -103,15 +103,14 @@ void loop() {
     readString = readComPort();
   }
   if(readString.length() > 0){
-    int iType = readString[0];  // read request
-    readString.remove(0,1);     // remove iType from readString
-    readTime();                 // read time from readString and remove it incl limiter Byte ;
-    if(iType == 119){           // w[119] get request from android device
-      String sSendString = val_temperature + limiterByte + val_humidity + limiterByte + val_pressure + limiterByte + val_moisture + limiterByte + val_brightness + limiterByte + controlValues[0] + limiterByte + i_fan_level + limiterByte;
+    int iCommand = readString[0];   // read the request
+    readString.remove(0,1);         // remove iCommand from readString
+    readTime();                     // read time from readString and remove it incl limiter Byte ;
+    if(iCommand == 119){            // w[119] get request from android device
+      String sSendString = val_temperature + limiterByte + val_humidity + limiterByte + val_pressure + limiterByte + val_moisture + limiterByte + val_brightness + limiterByte;
       Serial.println(sSendString);
-      sSendString = "";
     }
-    else if(iType == 120){      //x[120] set request from android device
+    else if(iCommand == 120){       //x[120] set request from android device
       //incoming data: LED_level, led_on_time, led_off_time -- seperated by ;
       int limiterPosition = 0;
       for(int i=0; i<(sizeof(controlValues)/sizeof(long)); i++){
@@ -128,7 +127,14 @@ void loop() {
         limiterPosition = 0;
       }
     }
-    iType = 0;
+    else if(iCommand == 121){     //y[121] get request for the controlValues
+      String sSendString = "s";
+      for(int i = 0; i<(sizeof(controlValues)/sizeof(long)); i++) {
+        sSendString += String(con trolValues[i]) + ";";
+      }
+      Serial.println(sSendString);
+    }
+    iCommand = 0;
     readString = "";
   }  
   // display the current sensor values
@@ -222,7 +228,7 @@ float getWaterContent(){
 
 String readComPort(){
   while (Serial.available()) {
-    delay(1);
+    delay(2);
     if (Serial.available() >0) {
       char c = Serial.read();
       readString += c;
