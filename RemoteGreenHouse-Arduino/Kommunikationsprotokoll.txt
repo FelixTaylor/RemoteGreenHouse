@@ -1,0 +1,28 @@
+Arduino:
+endByte: 	\n 	- ASCII 10
+
+receivedData:			CommandByte		ASCII
+	- get request		w			119
+		sendString:temperature;humidity;pressure;moisture;brightness;\n
+
+	- set request		x			120
+		receiveString:time;led_state;led_on_time;led_off_time;led_min_bright;
+
+	- synch request		y			121
+		sendString:sled_state;led_on_time;led_off_time;led_min_bright;\n
+
+Androird stores the SensorValues in an array in the above mentioned "get request" order.
+Androird stores the ControlValues in an array in the above mentioned "synch request" order.
+
+sensorValues[0]		temperature
+sensorValues[1]		humidity
+sensorValues[2]		pressure
+sensorValues[3]		moisture
+sensorValues[4]		brightness
+
+controlValues[0]	led_state
+controlValues[1]	led_on_time
+controlValues[2]	led_off_time
+controlValues[3]	led_min_bright
+controlValues[4]	light_controll_mode
+

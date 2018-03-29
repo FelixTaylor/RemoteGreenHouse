@@ -13,12 +13,15 @@ import android.os.ParcelUuid;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.text.format.DateUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.CheckBox;
 import android.widget.SeekBar;
 import android.widget.TabHost;
 import android.widget.TableLayout;
@@ -51,7 +54,7 @@ public class MainActivity extends AppCompatActivity implements
     private OutputStream outputStream;                      // Bluetooth communication Outputstream
     private SeekBar sb_LEDLightControl;                     // SeekBar to control the LED Stripes
     private Set<BluetoothDevice> pairedDevices;             // Set of paired bluetooth devices
-    private TextView tv_ValueLEDState, tv_lightOnTime, tv_lightOffTime;
+    private TextView tv_ValueLEDState, tv_lightOnTime, tv_lightOffTime, et_lightMinBright;
     private Thread workerThread;                            // Thread for bluetooth data stream
     private double sensorValues[];
     private double controlValues[];
@@ -78,38 +81,56 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
-    public void lightOnClick(View v){
+    public void lightTimeClick(View v){
         Calendar calendar = Calendar.getInstance();
-        timePickerDialog = new TimePickerDialog(MainActivity.this, new TimePickerDialog.OnTimeSetListener() {
-            @Override
-            public void onTimeSet(TimePicker timePicker, int i, int i1) {
-                Calendar timeCalendar = Calendar.getInstance();
-                timeCalendar.set(Calendar.HOUR_OF_DAY, i);
-                timeCalendar.set(Calendar.MINUTE, i1);
-                String timeString = DateUtils.formatDateTime(MainActivity.this,timeCalendar.getTimeInMillis(),DateUtils.FORMAT_SHOW_TIME);
-                tv_lightOnTime.setText(timeString);
-                controlValues[1] = (double)(i*3600000+i1*60000);
-                sendData();
-            }
-        },calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), true);
+        switch (v.getId()) {
+            case R.id.tv_lightOnTime:
+                timePickerDialog = new TimePickerDialog(MainActivity.this, new TimePickerDialog.OnTimeSetListener() {
+                    @Override
+                    public void onTimeSet(TimePicker timePicker, int i, int i1) {
+                        Calendar timeCalendar = Calendar.getInstance();
+                        timeCalendar.set(Calendar.HOUR_OF_DAY, i);
+                        timeCalendar.set(Calendar.MINUTE, i1);
+                        String timeString = DateUtils.formatDateTime(MainActivity.this, timeCalendar.getTimeInMillis(), DateUtils.FORMAT_SHOW_TIME);
+                        tv_lightOnTime.setText(timeString);
+                        controlValues[1] = (double) i * 3600000 + i1 * 1000;
+                        sendData();
+                    }
+                }, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), true);
+                break;
+
+            case R.id.tv_lightOffTime:
+                timePickerDialog = new TimePickerDialog(MainActivity.this, new TimePickerDialog.OnTimeSetListener() {
+                    @Override
+                    public void onTimeSet(TimePicker timePicker, int i, int i1) {
+                        Calendar timeCalendar = Calendar.getInstance();
+                        timeCalendar.set(Calendar.HOUR_OF_DAY, i);
+                        timeCalendar.set(Calendar.MINUTE, i1);
+                        String timeString = DateUtils.formatDateTime(MainActivity.this, timeCalendar.getTimeInMillis(), DateUtils.FORMAT_SHOW_TIME);
+                        tv_lightOffTime.setText(timeString);
+                        controlValues[2] = (double) i * 3600000 + i1 * 1000;
+                        sendData();
+                    }
+                }, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), true);
+                break;
+        }
         timePickerDialog.show();
     }
 
-    public void lightOffClick(View v){
-        Calendar calendar = Calendar.getInstance();
-        timePickerDialog = new TimePickerDialog(MainActivity.this, new TimePickerDialog.OnTimeSetListener() {
-            @Override
-            public void onTimeSet(TimePicker timePicker, int i, int i1) {
-                Calendar timeCalendar = Calendar.getInstance();
-                timeCalendar.set(Calendar.HOUR_OF_DAY, i);
-                timeCalendar.set(Calendar.MINUTE, i1);
-                String timeString = DateUtils.formatDateTime(MainActivity.this,timeCalendar.getTimeInMillis(),DateUtils.FORMAT_SHOW_TIME);
-                tv_lightOffTime.setText(timeString);
-                controlValues[2] = (double)i*3600000+i1*1000;
-                sendData();
-            }
-        },calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), true);
-        timePickerDialog.show();
+    public void lightCheckBox(View v){
+        CheckBox chb_igTime = findViewById(R.id.chb_igTime);
+        CheckBox chb_igBright = findViewById(R.id.chb_igBright);
+
+        if(!chb_igTime.isChecked() && !chb_igBright.isChecked()){
+            controlValues[4] = 0;
+        }else if(chb_igTime.isChecked() && !chb_igBright.isChecked()){
+            controlValues[4] = 1;
+        }else if(!chb_igTime.isChecked() && chb_igBright.isChecked()){
+            controlValues[4] = 2;
+        }else{                      //case: both boxes are checked -> light is always on
+            controlValues[4] = 3;
+        }
+        sendData();
     }
 
     protected void onCreate(Bundle savedInstanceState) {
@@ -126,18 +147,38 @@ public class MainActivity extends AppCompatActivity implements
         IntentFilter filter = new IntentFilter();
         filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
         this.registerReceiver(mReceiver, filter);
+        stopWorker = true;
 
-        sb_LEDLightControl = findViewById(R.id.sb_LEDState);
-        tv_ValueLEDState   = findViewById(R.id.tv_LEDState);
-        tv_lightOnTime     = findViewById(R.id.tv_lightOnTime);
-        tv_lightOffTime    = findViewById(R.id.tv_lightOffTime);
-        table              = findViewById(R.id.table);
+        sb_LEDLightControl  = findViewById(R.id.sb_LEDState);
+        tv_ValueLEDState    = findViewById(R.id.tv_LEDState);
+        tv_lightOnTime      = findViewById(R.id.tv_lightOnTime);
+        tv_lightOffTime     = findViewById(R.id.tv_lightOffTime);
+        et_lightMinBright   = findViewById(R.id.tv_lightOnBright);
+        table               = findViewById(R.id.table);
+
+        et_lightMinBright.addTextChangedListener(new TextWatcher(){
+            @Override public void afterTextChanged(Editable editable) {
+                try{
+                    controlValues[3] = Integer.valueOf(et_lightMinBright.getText().toString());
+                }catch(NumberFormatException ex){
+                    controlValues[3] = 0;
+                }
+                sendData();
+            }
+            @Override public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+            @Override public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+        });
 
         // Initialize Values
         //SensorValues = {temp, hum, pressure, moisture, brightness}
         sensorValues = new double[5];
-        //controlValues = {Led_state, Led_on_time, Led_off_time}
-        controlValues = new double[3];
+        //controlValues = {Led_state, Led_on_time, Led_off_time, Led_min_brightness, ignoreTime, ignoreBrightness}
+        controlValues = new double[5];
+        //tableValues = {temp, hum, pressure, moisture, brightness}
         tableValues = new double[5];
         tableIdentifiers = res.getStringArray(R.array.array_label_identifiers);
         inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -150,7 +191,9 @@ public class MainActivity extends AppCompatActivity implements
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         sb_LEDLightControl.setOnSeekBarChangeListener(new SeekbarListener());
         displaySensorValues();
+
     }
+
 
     @Override public boolean onPrepareOptionsMenu(Menu menu) {
         MenuItem bluetooth = menu.getItem(0);
@@ -209,8 +252,9 @@ public class MainActivity extends AppCompatActivity implements
         ((TextView) tabHost.getTabWidget().getChildAt(tabHost.getCurrentTab())
                 .findViewById(android.R.id.title))
                 .setTextColor(res.getColor(R.color.color_primary_dark));
-        displayControlValues();
 
+        displayControlValues();
+        displaySensorValues();
     }
 
     /*---------------------------
@@ -294,10 +338,12 @@ public class MainActivity extends AppCompatActivity implements
 
     public void serialWrite(String s) {
         // writes the string s to the output stream
-        try {
-            outputStream.write(s.getBytes());
-        } catch(IOException e){
-            Log.i(TAG,"could not send String");
+        if(!stopWorker) {
+            try {
+                outputStream.write(s.getBytes());
+            } catch (IOException e) {
+                Log.i(TAG, "could not send String");
+            }
         }
     }
 
@@ -404,9 +450,7 @@ public class MainActivity extends AppCompatActivity implements
                 controlValues[i] = getDataValue(str_data.substring(1,str_data.length()-1));
                 Log.d(TAG,"controlValue[" + i + "]" + controlValues[i]);
             }
-            sb_LEDLightControl.setProgress((int)controlValues[0]);
-            tv_lightOnTime.setText(DateUtils.formatDateTime(MainActivity.this,(long)controlValues[1],DateUtils.FORMAT_SHOW_TIME));
-            tv_lightOffTime.setText(DateUtils.formatDateTime(MainActivity.this,(long)controlValues[2],DateUtils.FORMAT_SHOW_TIME));
+            displayControlValues();
         }
     }
 
@@ -470,8 +514,8 @@ public class MainActivity extends AppCompatActivity implements
         tabHost.setup();
 
         String tabText[] = {
-                res.getString(R.string.label_overview),
-                res.getString(R.string.label_brightness)
+                res.getString(R.string.label_tabOverview),
+                res.getString(R.string.label_tabLightning)
         };
         int layoutIds[] = {
                 R.id.content_overview,
@@ -526,9 +570,24 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     private void displayControlValues(){
+        // brightness tab
         sb_LEDLightControl.setProgress((int)controlValues[0]);
         tv_lightOnTime.setText(DateUtils.formatDateTime(MainActivity.this,(long)controlValues[1],DateUtils.FORMAT_SHOW_TIME));
         tv_lightOffTime.setText(DateUtils.formatDateTime(MainActivity.this,(long)controlValues[2],DateUtils.FORMAT_SHOW_TIME));
-        displaySensorValues();
+        et_lightMinBright.setText(String.valueOf((int)controlValues[3]));
+
+        CheckBox chb_igTime = findViewById(R.id.chb_igTime);
+        CheckBox chb_igBright = findViewById(R.id.chb_igBright);
+        if(controlValues[4] == 0 || controlValues[4] == 2){
+            chb_igTime.setChecked(false);
+        }else{
+            chb_igTime.setChecked(true);
+        }
+        if(controlValues[4] == 0 || controlValues[4] == 1){
+            chb_igBright.setChecked(false);
+        }else{
+            chb_igBright.setChecked(true);
+        }
+
     }
 }

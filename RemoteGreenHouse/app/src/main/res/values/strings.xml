@@ -2,21 +2,27 @@
     <string name="app_name">Remote Green House</string>
     <string name="action_settings">Settings</string>
 
-    <string name="label_overview">Overview</string>
     <string name="label_bluetooth">Bluetooth</string>
     <string name="label_temperature">Temperature</string>
     <string name="label_airHumidity">Air Humidity</string>
     <string name="label_brightness">Brightness</string>
     <string name="label_pressure">Pressure</string>
-    <string name="label_terraHumidity">Terra Humidity</string>
-    <string name="label_lighton">Licht an</string>
-    <string name="label_lightoff">Licht aus</string>
+    <string name="label_moisture">Moisture</string>
+    <string name="label_lightOnTime">Time limit: Turn on light</string>
+    <string name="label_lightOffTime">Time limit: Turn off light</string>
+    <string name="label_lightMinBright">Brightness limit:</string>
+    <string name="label_ignoreTime">ignore time limits</string>
+    <string name="label_ignoreBrightness">ignore brightness limit</string>
+    <string name="label_tabOverview">Overview</string>
+    <string name="label_tabLightning">Lightning</string>
+    <string name="label_tabVentilation">Ventilation</string>
+    <string name="label_tabWatering">Watering</string>
 
     <array name="array_label_identifiers">
         <item>@string/label_temperature</item>
         <item>@string/label_airHumidity</item>
         <item>@string/label_pressure</item>
-        <item>@string/label_terraHumidity</item>
+        <item>@string/label_moisture</item>
         <item>@string/label_brightness</item>
     </array>
 
@@ -40,6 +46,7 @@
     <!--Values-->
     <string name="val_nan">NAN</string>
     <string name="val_initial_time">00:00</string>
+    <string name="val_initial_brightness">0</string>
 
     <!--Physical Dimensions-->
     <string name="dim_pressure">%1$s hPa</string>
