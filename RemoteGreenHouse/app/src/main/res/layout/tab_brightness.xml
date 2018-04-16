@@ -3,19 +3,28 @@
     style="@style/Container" android:paddingTop="@dimen/default_activity_padding">
 
     <LinearLayout style="@style/Container.Vertical">
-        <TextView android:id="@+id/tv_LEDState" style="@style/Label.Title"
-            android:layout_width="match_parent" android:textAlignment="center"
-            android:textSize="@dimen/default_font_size"/>
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="@string/label_brightness" android:textSize="@dimen/text_title"
+            android:layout_gravity="center"/>
 
         <SeekBar android:id="@+id/sb_LEDState" android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
+        <TextView android:id="@+id/tv_LEDState" style="@style/Label.Title"
+            android:layout_width="match_parent" android:textAlignment="center"
+            android:textSize="@dimen/default_font_size"/>
+
         <!-- Time turn on/off limits -->
-        <LinearLayout style="@style/Container.Vertical">
+        <LinearLayout style="@style/Container.Vertical" android:paddingTop="30dp">
+            <android.support.v7.widget.AppCompatCheckBox android:id="@+id/chb_timerClock"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="@string/label_timerClock" android:onClick="lightCheckBox"
+                android:checked="false"/>
+
             <LinearLayout style="@style/Container.Horizontal">
-                <TextView android:text="@string/label_lightOnTime" android:layout_weight="1"
-                    android:layout_width="0dp" android:layout_height="wrap_content"
-                    android:textSize="@dimen/default_font_size"/>
+                <TextView android:id= "@+id/tv_labelLightOnTime" android:text="@string/label_lightOnTime"
+                    android:layout_weight="1" android:layout_width="0dp"
+                    android:layout_height="wrap_content" android:textSize="@dimen/default_font_size"/>
 
                 <TextView android:id="@+id/tv_lightOnTime" android:text="@string/val_initial_time"
                     android:layout_weight="1" android:layout_width="0dp"
@@ -24,9 +33,9 @@
             </LinearLayout>
 
             <LinearLayout style="@style/Container.Horizontal">
-                <TextView android:text="@string/label_lightOffTime" android:layout_weight="1"
-                    android:layout_width="0dp" android:layout_height="wrap_content"
-                    android:textSize="@dimen/default_font_size"/>
+                <TextView android:id= "@+id/tv_labelLightOffTime" android:text="@string/label_lightOffTime"
+                    android:layout_weight="1" android:layout_width="0dp"
+                    android:layout_height="wrap_content" android:textSize="@dimen/default_font_size"/>
 
                 <TextView android:id="@+id/tv_lightOffTime" android:text="@string/val_initial_time"
                     android:layout_weight="1" android:layout_width="0dp"
@@ -36,25 +45,25 @@
         </LinearLayout>
 
         <!-- Brightness turn on/off limits -->
-        <LinearLayout style="@style/Container.Horizontal" android:layout_weight="3"
-            android:layout_gravity="center">
-            <TextView android:text="@string/label_lightMinBright" android:layout_weight="1"
-                android:layout_width="0dp"      android:layout_height="wrap_content"
-                android:textSize="@dimen/default_font_size"/>
+        <LinearLayout style="@style/Container.Vertical">
+            <android.support.v7.widget.AppCompatCheckBox android:id="@+id/chb_lightingSensor"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="@string/label_lightingSensor" android:onClick="lightCheckBox"
+            android:checked="false"/>
 
-            <EditText android:id="@+id/tv_lightOnBright" android:text="@string/val_initial_brightness"
-                android:inputType="number" android:layout_weight="1"
-                android:layout_width="0dp" android:layout_height="wrap_content"
-                android:gravity="top|start" android:textSize="@dimen/default_font_size"/>
+            <LinearLayout style="@style/Container.Horizontal" android:layout_weight="3"
+                android:layout_gravity="center">
+                <TextView android:id="@+id/tv_lightingSensor" android:text="@string/label_lightMinBright"
+                    android:layout_weight="1" android:layout_width="0dp"
+                    android:layout_height="wrap_content" android:textSize="@dimen/default_font_size"/>
+
+                <EditText android:id="@+id/et_lightingSensor" android:text="@string/val_initial_brightness"
+                    android:inputType="number" android:layout_weight="1"
+                    android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:gravity="top|start" android:textSize="@dimen/default_font_size"/>
+            </LinearLayout>
         </LinearLayout>
 
-        <android.support.v7.widget.AppCompatCheckBox android:id="@+id/chb_igTime"
-            android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:text="@string/label_ignoreTime" android:onClick="lightCheckBox"/>
-
-        <android.support.v7.widget.AppCompatCheckBox android:id="@+id/chb_igBright"
-            android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:text="@string/label_ignoreBrightness" android:onClick="lightCheckBox"/>
 
     </LinearLayout>
 </LinearLayout>

@@ -22,6 +22,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.CheckBox;
+import android.widget.EditText;
 import android.widget.SeekBar;
 import android.widget.TabHost;
 import android.widget.TableLayout;
@@ -33,6 +34,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Calendar;
 import java.util.Set;
+
+import static java.sql.Types.NULL;
 
 public class MainActivity extends AppCompatActivity implements
         TabHost.OnTabChangeListener {
@@ -118,17 +121,48 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     public void lightCheckBox(View v){
-        CheckBox chb_igTime = findViewById(R.id.chb_igTime);
-        CheckBox chb_igBright = findViewById(R.id.chb_igBright);
+        CheckBox chb_timerClock         = findViewById(R.id.chb_timerClock);
+        CheckBox chb_lightingSensor     = findViewById(R.id.chb_lightingSensor);
+        TextView tv_labelLightOnTime    = findViewById(R.id.tv_labelLightOnTime);
+        TextView tv_lightOnTime         = findViewById(R.id.tv_lightOnTime);
+        TextView tv_labelLightOffTime   = findViewById(R.id.tv_labelLightOffTime);
+        TextView tv_lightOffTime        = findViewById(R.id.tv_lightOffTime);
+        TextView tv_lightingSensor      = findViewById(R.id.tv_lightingSensor);
+        EditText et_lightingSensor      = findViewById(R.id.et_lightingSensor);
 
-        if(!chb_igTime.isChecked() && !chb_igBright.isChecked()){
+
+        if(chb_timerClock.isChecked() && chb_lightingSensor.isChecked()) {
             controlValues[4] = 0;
-        }else if(chb_igTime.isChecked() && !chb_igBright.isChecked()){
+            tv_labelLightOnTime.setTextColor(res.getColor(R.color.colorText));
+            tv_lightOnTime.setTextColor(res.getColor(R.color.colorText));
+            tv_labelLightOffTime.setTextColor(res.getColor(R.color.colorText));
+            tv_lightOffTime.setTextColor(res.getColor(R.color.colorText));
+            tv_lightingSensor.setTextColor(res.getColor(R.color.colorText));
+            et_lightingSensor.setTextColor(res.getColor(R.color.colorText));
+        }else if(!chb_timerClock.isChecked() && chb_lightingSensor.isChecked()){
             controlValues[4] = 1;
-        }else if(!chb_igTime.isChecked() && chb_igBright.isChecked()){
+            tv_labelLightOnTime.setTextColor(res.getColor(R.color.colorDisabledText));
+            tv_lightOnTime.setTextColor(res.getColor(R.color.colorDisabledText));
+            tv_labelLightOffTime.setTextColor(res.getColor(R.color.colorDisabledText));
+            tv_lightOffTime.setTextColor(res.getColor(R.color.colorDisabledText));
+            tv_lightingSensor.setTextColor(res.getColor(R.color.colorText));
+            et_lightingSensor.setTextColor(res.getColor(R.color.colorText));
+        }else if(chb_timerClock.isChecked() && !chb_lightingSensor.isChecked()){
             controlValues[4] = 2;
-        }else{                      //case: both boxes are checked -> light is always on
+            tv_labelLightOnTime.setTextColor(res.getColor(R.color.colorText));
+            tv_lightOnTime.setTextColor(res.getColor(R.color.colorText));
+            tv_labelLightOffTime.setTextColor(res.getColor(R.color.colorText));
+            tv_lightOffTime.setTextColor(res.getColor(R.color.colorText));
+            tv_lightingSensor.setTextColor(res.getColor(R.color.colorDisabledText));
+            et_lightingSensor.setTextColor(res.getColor(R.color.colorDisabledText));
+        }else{
             controlValues[4] = 3;
+            tv_labelLightOnTime.setTextColor(res.getColor(R.color.colorDisabledText));
+            tv_lightOnTime.setTextColor(res.getColor(R.color.colorDisabledText));
+            tv_labelLightOffTime.setTextColor(res.getColor(R.color.colorDisabledText));
+            tv_lightOffTime.setTextColor(res.getColor(R.color.colorDisabledText));
+            tv_lightingSensor.setTextColor(res.getColor(R.color.colorDisabledText));
+            et_lightingSensor.setTextColor(res.getColor(R.color.colorDisabledText));
         }
         sendData();
     }
@@ -153,7 +187,7 @@ public class MainActivity extends AppCompatActivity implements
         tv_ValueLEDState    = findViewById(R.id.tv_LEDState);
         tv_lightOnTime      = findViewById(R.id.tv_lightOnTime);
         tv_lightOffTime     = findViewById(R.id.tv_lightOffTime);
-        et_lightMinBright   = findViewById(R.id.tv_lightOnBright);
+        et_lightMinBright   = findViewById(R.id.et_lightingSensor);
         table               = findViewById(R.id.table);
 
         et_lightMinBright.addTextChangedListener(new TextWatcher(){
@@ -576,17 +610,24 @@ public class MainActivity extends AppCompatActivity implements
         tv_lightOffTime.setText(DateUtils.formatDateTime(MainActivity.this,(long)controlValues[2],DateUtils.FORMAT_SHOW_TIME));
         et_lightMinBright.setText(String.valueOf((int)controlValues[3]));
 
-        CheckBox chb_igTime = findViewById(R.id.chb_igTime);
-        CheckBox chb_igBright = findViewById(R.id.chb_igBright);
-        if(controlValues[4] == 0 || controlValues[4] == 2){
-            chb_igTime.setChecked(false);
+        CheckBox chb_timerClock = findViewById(R.id.chb_timerClock);
+        CheckBox chb_lightingSensor = findViewById(R.id.chb_lightingSensor);
+        TextView tv_lightingSensor = findViewById(R.id.tv_lightingSensor);
+        EditText et_lightingSensor = findViewById(R.id.et_lightingSensor);
+
+        if((controlValues[4] == 0 || controlValues[4] == 2) && controlValues[4] != NULL){
+            chb_timerClock.setChecked(true);
         }else{
-            chb_igTime.setChecked(true);
+            chb_timerClock.setChecked(false);
         }
-        if(controlValues[4] == 0 || controlValues[4] == 1){
-            chb_igBright.setChecked(false);
+        if((controlValues[4] == 0 || controlValues[4] == 1) && controlValues[4] != NULL){
+            chb_lightingSensor.setChecked(true);
+            tv_lightingSensor.setTextColor(res.getColor(R.color.colorText));
+            et_lightingSensor.setTextColor(res.getColor(R.color.colorText));
         }else{
-            chb_igBright.setChecked(true);
+            chb_lightingSensor.setChecked(false);
+            tv_lightingSensor.setTextColor(res.getColor(R.color.colorDisabledText));
+            et_lightingSensor.setTextColor(res.getColor(R.color.colorDisabledText));
         }
 
     }
