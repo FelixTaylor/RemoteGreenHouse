@@ -14,7 +14,7 @@
     <string name="label_lightMinBright">lighting limit</string>
     <string name="label_tabOverview">Overview</string>
     <string name="label_tabLightning">Lighting</string>
-    <string name="label_tabVentilation">Ventilation</string>
+    <string name="label_tab_ventilation">Ventilation</string>
     <string name="label_tabWatering">Watering</string>
     <string name="label_timerClock">Timer clock</string>
     <string name="label_lightingSensor">Lighting sensor</string>

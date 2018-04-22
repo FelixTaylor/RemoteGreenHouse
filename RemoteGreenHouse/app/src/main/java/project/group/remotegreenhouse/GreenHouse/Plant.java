@@ -1,6 +1,7 @@
 package project.group.remotegreenhouse.GreenHouse;
 public class Plant {
     private static final String TAG = "Plant";
+
     private String name;
     private double moisture;
 
@@ -33,7 +34,7 @@ public class Plant {
         return this.moisture;
     }
 
-    public String toString() {
-        return  TAG + " '" + getName() + "'";
+    @Override public String toString() {
+        return "Plant{" +  "name='" + name + '\'' + ", moisture=" + moisture + '}';
     }
 }

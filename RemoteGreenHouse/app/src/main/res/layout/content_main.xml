@@ -7,7 +7,6 @@
     tools:showIn="@layout/activity_main" android:background="@color/colorActivityBackground">
 
 
-
     <TabHost xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/tabHost"
         android:layout_width="match_parent" android:layout_height="match_parent" >
 
@@ -15,7 +14,7 @@
             android:layout_height="match_parent">
 
             <HorizontalScrollView android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:fillViewport="true" android:scrollbars="none">
+                android:fillViewport="true">
 
                 <TabWidget android:id="@android:id/tabs" android:layout_width="wrap_content"
                     android:layout_height="wrap_content" android:background="@color/color_primary" />
@@ -26,12 +25,10 @@
 
                 <include layout="@layout/tab_overview" android:id="@+id/content_overview"/>
                 <include layout="@layout/tab_brightness" android:id="@+id/content_brightness"/>
+                <include layout="@layout/tab_ventilation" android:id="@+id/content_ventilation"/>
+
 
             </FrameLayout>
-
         </LinearLayout>
     </TabHost>
-
-
-
 </LinearLayout>
