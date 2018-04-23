@@ -40,6 +40,7 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 
 import static java.sql.Types.NULL;
 
@@ -432,7 +433,6 @@ public class MainActivity extends AppCompatActivity implements
                     try{
                         int bytesAvailable = inputStream.available();               // if there is something to read
                         if(bytesAvailable > 0){
-                            Log.d(TAG, "bytes Available");
                             byte[] packetBytes = new byte[bytesAvailable];
                             inputStream.read(packetBytes);
                             for(int i=0;i<bytesAvailable;i++){
@@ -517,6 +517,12 @@ public class MainActivity extends AppCompatActivity implements
         calendar.getTime();
         return Integer.toString(3600000*calendar.get(Calendar.HOUR_OF_DAY)+60000*calendar.get(Calendar.MINUTE)+1000*calendar.get(Calendar.SECOND));
     }
+    private String convertTimeString(double millis){
+        int hours = (int) (millis / 3600000);
+        int mins = (int) ((millis-hours*3600000) / 1000);
+        String str = String.format("%02d:%02d", hours, mins);
+        return str;
+    }
     private void   serialWrite(String s) {
         // writes the string s to the output stream
         if(!stopWorker) {
@@ -535,6 +541,8 @@ public class MainActivity extends AppCompatActivity implements
         }
         Log.d(TAG, "Sendstring: '" + sendString + "'");
         serialWrite(sendString);
+        Log.d(TAG, "turn on time:'" + controlValues[1] + "'");
+        Log.d(TAG, "turn off time:'" + controlValues[2] + "'");
     }
 
     private void displaySensorValues() {
@@ -565,8 +573,10 @@ public class MainActivity extends AppCompatActivity implements
         SimpleDateFormat formatter = new SimpleDateFormat("HH:mm");
         formatter.setTimeZone(TimeZone.getTimeZone("GMT"));
         sb_LEDLightControl.setProgress((int)controlValues[0]);
-        tv_lightOnTime.setText(formatter.format(new Date((long)controlValues[1])));
-        tv_lightOffTime.setText(formatter.format(new Date((long)controlValues[2])));
+        tv_lightOnTime.setText(convertTimeString(controlValues[1]));
+        tv_lightOffTime.setText(convertTimeString(controlValues[2]));
+        //tv_lightOnTime.setText(formatter.format(new Date((long)controlValues[1])));
+        //tv_lightOffTime.setText(formatter.format(new Date((long)controlValues[2])));
         et_lightMinBright.setText(String.valueOf((int)controlValues[3]));
 
         if((controlValues[4] == 0 || controlValues[4] == 2) && controlValues[4] != NULL){
