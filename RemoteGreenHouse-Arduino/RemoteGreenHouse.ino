@@ -80,22 +80,17 @@ void setup() {
    * --------------------
    */
   //Barometer Setup()
-  if (!barometer.begin()) {
-  }
-  
+  barometer.begin();
   //lightSensor Setup()
   lightSensor.SetMode(Continuous_H_resolution_Mode);
+  
+  initializePins();
+  initializeVariables();
+  
   //Display Setup()
   display.setTextColor(WHITE);
   display.clearDisplay();
   displayStartMessage();
-
-  //Pinmode Setup and initial pin conditions
-  initializePins();
-
-  // Initialize the variables
-  initializeVariables();
-
 }
 
 void loop() {  
@@ -119,11 +114,9 @@ void loop() {
       for(int i = 0; i<(sizeof(sensorValues)/sizeof(long)); i++) {
         sSendString += String(sensorValues[i]) + ";";
       }
-      //String sSendString = val_temperature + limiterByte + val_humidity + limiterByte + val_pressure + limiterByte + val_moisture + limiterByte + val_brightness + limiterByte;
       Serial.println(sSendString);
     }
     else if(iCommand == 120){       //x[120] set request from android device
-      //incoming data: LED_level, led_on_time, led_off_time, led_min_brightneess -- seperated by ;
       int limiterPosition = 0;
       for(int i=0; i<(sizeof(controlValues)/sizeof(long)); i++){
         for(int j=0; j<=readString.length(); j++){
@@ -148,7 +141,8 @@ void loop() {
     }
     iCommand = 0;
     readString = "";
-  }  
+  }
+
   // display the current sensor values
   if(curMillis - prevMillis < delayMillis){
     displayPressBright();
@@ -173,10 +167,15 @@ void updateLight(){
   switch(controlValues[4]){
     case 0:
       if(currentTime >= controlValues[1] && currentTime <= controlValues[2]){
-        if(sensorValues[4] <= (controlValues[3]-3)){      
-          setLEDlevel(controlValues[0]);
+        if(sensorValues[4] <= 0.95*controlValues[3]){      
+        //if(controlValues[3] = -1){
+          //int i = 255*(controlValues[3] - sensorValues[4])/(controlValues[3]-10);        
+          //setLEDlevel(i);
+        //}else{
+        setLEDlevel(controlValues[0]);
+        //}
         }
-        else if(sensorValues[4] > (controlValues[3]+3)){      
+        else if(sensorValues[4] > 1.05*controlValues[3]){      
           setLEDlevel(0);
         }
       }
@@ -186,10 +185,15 @@ void updateLight(){
       break;
       
     case 1:
-      if(sensorValues[4] <= (controlValues[3]-3)){      
+      if(sensorValues[4] <= 0.95*controlValues[3]){      
+        //if(controlValues[3] = -1){
+          //int i = 255*(controlValues[3] - sensorValues[4])/(controlValues[3]-10);        
+          //setLEDlevel(i);
+        //}else{
         setLEDlevel(controlValues[0]);
+        //}
       }
-      else if(sensorValues[4] > (controlValues[3]+3)){      
+      else if(sensorValues[4] > 1.05*controlValues[3]){      
         setLEDlevel(0);
       }
       break;
@@ -271,7 +275,7 @@ float getWaterContent(){
 
 String readComPort(){
   while (Serial.available()) {
-    delay(2);
+    delay(10);
     if (Serial.available() >0) {
       char c = Serial.read();
       readString += c;
@@ -296,10 +300,11 @@ String convert_ASCII_Code(int mASCII){
 }
 
 void initializeVariables(){
-  for(int i = 0; i<(sizeof(controlValues)/sizeof(long)); i++){
-    controlValues[i]        = 0;
-  }
-  controlValues[2]          = 24*3600000;
+  controlValues[0]          = 100;          // default brightnes
+  controlValues[1]          =  8*3600000;   // default turn on time  8 am
+  controlValues[2]          = 20*3600000;   // default turn off time 8 pm
+  controlValues[3]          = 400;          // default brightneslimit
+  controlValues[4]          = 3;            // default light mode (always on)
   for(int i = 0; i<(sizeof(sensorValues)/sizeof(long)); i++){
     sensorValues[i]        = 0;
   }  

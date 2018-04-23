@@ -15,6 +15,7 @@ import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.text.format.DateFormat;
 import android.text.format.DateUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -33,8 +34,12 @@ import android.widget.Toast;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
 import java.util.Set;
+import java.util.TimeZone;
 
 import static java.sql.Types.NULL;
 
@@ -46,13 +51,11 @@ public class MainActivity extends AppCompatActivity implements
     private static final int REQUEST_ENABLE_BT = 1;         // Code for Enable_Request
 
     private Resources res;                                  // Using resources directory
-    //private Set<BluetoothDevice> pairedDevices;             // Set of paired bluetooth devices
     private BluetoothAdapter bluetoothAdapter;              // Local bluetooth adapter
     private BluetoothDevice device;                         // Bluetooth device
     private BluetoothSocket bluetoothSocket;                // Bluetooth communication Socket
-    private InputStream inputStream;                        // Bluetooth communication Inputsream
-    private OutputStream outputStream;                      // Bluetooth communication Outputstream
-    //private Thread workerThread;                            // Thread for bluetooth data stream
+    private InputStream inputStream;                        // Bluetooth communication input stream
+    private OutputStream outputStream;                      // Bluetooth communication output stream
 
     private TabHost tabHost;
     private LayoutInflater inflater;
@@ -248,6 +251,7 @@ public class MainActivity extends AppCompatActivity implements
     @Override public void    onStopTrackingTouch(SeekBar seekBar) {
         if(bluetoothAdapter.isEnabled() && outputStream != null) {
             controlValues[0] = sb_LEDLightControl.getProgress();
+            setLightControl();
             sendControlValues();
         }
     }
@@ -403,6 +407,7 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
     private void beginListenForData() {
+        Log.d(TAG, "beginListenForData");
         // Thread for receiving bluetooth data from inputstream and data synchronization
         final Handler handler = new Handler();
         final byte delimiter = 10;                                  // ASCII code for a newline character
@@ -427,6 +432,7 @@ public class MainActivity extends AppCompatActivity implements
                     try{
                         int bytesAvailable = inputStream.available();               // if there is something to read
                         if(bytesAvailable > 0){
+                            Log.d(TAG, "bytes Available");
                             byte[] packetBytes = new byte[bytesAvailable];
                             inputStream.read(packetBytes);
                             for(int i=0;i<bytesAvailable;i++){
@@ -441,7 +447,6 @@ public class MainActivity extends AppCompatActivity implements
                                             // evaluate the incoming data string
                                             Log.d(TAG,"receiving: '" + data + "'");
                                             getValuesFromData(data);
-                                            //setTableValues();
                                             displaySensorValues();
                                         }
                                     });
@@ -459,10 +464,6 @@ public class MainActivity extends AppCompatActivity implements
                 }
             }
         });
-
-        // I will change the table layout therefor we will need
-        // this method to reload the table and show the user the
-        // correct tableValues.
         workerThread.start();
     }
     private void stopListenForData() {
@@ -560,10 +561,12 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
     private void displayControlValues(){
-        // brightness tab
+        //brightness tab
+        SimpleDateFormat formatter = new SimpleDateFormat("HH:mm");
+        formatter.setTimeZone(TimeZone.getTimeZone("GMT"));
         sb_LEDLightControl.setProgress((int)controlValues[0]);
-        tv_lightOnTime.setText(DateUtils.formatDateTime(MainActivity.this,(long)controlValues[1],DateUtils.FORMAT_SHOW_TIME));
-        tv_lightOffTime.setText(DateUtils.formatDateTime(MainActivity.this,(long)controlValues[2],DateUtils.FORMAT_SHOW_TIME));
+        tv_lightOnTime.setText(formatter.format(new Date((long)controlValues[1])));
+        tv_lightOffTime.setText(formatter.format(new Date((long)controlValues[2])));
         et_lightMinBright.setText(String.valueOf((int)controlValues[3]));
 
         if((controlValues[4] == 0 || controlValues[4] == 2) && controlValues[4] != NULL){
@@ -594,7 +597,7 @@ public class MainActivity extends AppCompatActivity implements
 
 
 
-    // Note needed methods
+    // Not required methods
     @Override public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
     @Override public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
     @Override public void onStartTrackingTouch(SeekBar seekBar) {}
