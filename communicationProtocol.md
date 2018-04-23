@@ -119,7 +119,7 @@
 <br>
 <br>
 
-Beispiel Android device Anfrage an Arduino: Sendestringstellen
+<body> Beispiel Android device Anfrage an Arduino: Sendestringstellen </body>
 <br>
 
 <table>
@@ -205,8 +205,9 @@ Beispiel Android device Anfrage an Arduino: Sendestringstellen
 <br>
 <br>
 
-Beispiel Arduino antwortet auf Android device Anfrage: Sendestringstellen
+<body> Beispiel Arduino antwortet auf Android device Anfrage: Sendestringstellen </body>
 <br>
+
 <table>  
 	<colgroup>
 		<col width="120">
