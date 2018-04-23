@@ -33,7 +33,7 @@
 		<td> [4] </td>
 		<td> LightControlMode </td>
                 <td>
-                        <table>
+                        <table align="center">
                                 <tr align="center"> <th> Wert </th>  <th> Bedeutung</th> </tr>
                                 <tr align="center"> <td> 0 </td>  <td> Zeitschaltuhr + Lichtsensor</td> </tr>
                                 <tr align="center"> <td> 1 </td>  <td> Lichtsensor </td> </tr>
@@ -129,7 +129,6 @@
 		<col width="120">
 		<col width="120">
 	</colgroup>
-
 	<tr align="center">
 		<th> Stringstelle </th>
 		<th>  </th>
@@ -215,7 +214,6 @@
 		<col width="120">
 		<col width="120">
 	</colgroup>
-
 	<tr align="center">
 		<th> Stringstelle </th>
 		<th> w </th>
