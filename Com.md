@@ -80,10 +80,15 @@
 		<td> 120 </td>
 		<td> Arduino soll die übermittelten ControlValues setzen </td>
 	</tr>
+	<tr>
+		<td> y </td>
+		<td> 121 </td>
+		<td> Arduino soll die gespeicherten ControlValues übermittelten </td>
+	</tr>
 </table>
 
 <body> 
-	<h1> Beispiel: Sendestringstellen getrennt durch limiterbyte ";" </h1>
+	Beispiel Android device Anfrage an Arduino: Sendestringstellen
 </body>
 
 <table>
@@ -96,23 +101,110 @@
 		<th> 4 </th>
 		<th> 5 </th>
 		<th> 6 </th>
+		<th> 7 </th>
+		<th> 8 </th>
+		<th> 9 </th>
+		<th> 10 </th>
+		<th> 11 </th>
+		<th> 12 </th>
+	</tr>
+	<tr>
+		<td> </td>
+		<td> w </td>
+		<td> dayTime [ms] </td>
+		<td> ; </td>
+		<td> </td>
+		<td> </td>
+		<td> </td>
+		<td> </td>
+		<td> </td>
+		<td> </td>
+		<td> </td>
+		<td> </td>
+		<td> </td>
+		<td> </td>
+	</tr>
+	<tr>
+		<td> </td>
+		<td> x </td>
+		<td> dayTime [ms] </td>
+		<td> ; </td>
+		<td> controlValues[0] </td>
+		<td> ; </td>
+		<td> controlValues[1] </td>
+		<td> ; </td>
+		<td> controlValues[2] </td>
+		<td> ; </td>
+		<td> controlValues[3] </td>
+		<td> ; </td>
+		<td> controlValues[4] </td>
+		<td> ; </td>
+	</tr>
+</table>
+
+
+<body> 
+	Beispiel Arduino antwortet auf Android device Anfrage: Sendestringstellen
+</body>
+<table>
+	<tr>
+		<th> Anfrage: </th>
+		<th> Stringstelle </th>
+		<th> 0 </th>
+		<th> 1 </th>
+		<th> 2 </th>
+		<th> 3 </th>
+		<th> 4 </th>
+		<th> 5 </th>
+		<th> 6 </th>
+		<th> 7 </th>
+		<th> 8 </th>
+		<th> 9 </th>
+		<th> 10 </th>
 	</tr>
 	<tr>
 		<td> w </td>
-		<td> dayTime [ms] </td>
+		<td> </td>
 		<td> sensorValues[0] </td>
+		<td> ; </td>
 		<td> sensorValues[1] </td>
+		<td> ; </td>
 		<td> sensorValues[2] </td>
+		<td> ; </td>
 		<td> sensorValues[3] </td>
+		<td> ; </td>
 		<td> sensorValues[4] </td>
+		<td> ; </td>
+		<td> </td>
 	</tr>
 	<tr>
 		<td> x </td>
-		<td> dayTime [ms] </td>
+		<td> keine Antwort/td>
 		<td> </td>
 		<td> </td>
 		<td> </td>
 		<td> </td>
 		<td> </td>
+		<td> </td>
+		<td> </td>
+		<td> </td>
+		<td> </td>
+		<td> </td>
+		<td> </td>
+	</tr>
+	<tr>
+		<td> y </td>
+		<td> </td>
+		<td> s </td>
+		<td> controlValues[0] </td>
+		<td> ; </td>
+		<td> controlValues[1] </td>
+		<td> ; </td>
+		<td> controlValues[2] </td>
+		<td> ; </td>
+		<td> controlValues[3] </td>
+		<td> ; </td>
+		<td> controlValues[4] </td>
+		<td> ; </td>
 	</tr>
 </table>
