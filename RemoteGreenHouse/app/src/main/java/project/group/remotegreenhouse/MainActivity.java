@@ -71,7 +71,6 @@ public class MainActivity extends AppCompatActivity implements
     private int it_getValues;                               // Iterator in setSensorValues
     private long thread_pastMillis;                         // last send data time
     private double sensorValues[], controlValues[];
-    // 0 temperature, 1 humidity, 2 pressure, 3 brightness, 4 moisture,
 
 
     protected void onCreate(Bundle savedInstanceState) {
@@ -241,7 +240,7 @@ public class MainActivity extends AppCompatActivity implements
         }catch(NumberFormatException ex){
             controlValues[3] = 0;
         }
-        sendData();
+        sendControlValues();
     }
     @Override public void    onProgressChanged(SeekBar seekBar, int i, boolean b) {
         tv_ValueLEDState.setText(Integer.toString(sb_LEDLightControl.getProgress()));
@@ -249,7 +248,7 @@ public class MainActivity extends AppCompatActivity implements
     @Override public void    onStopTrackingTouch(SeekBar seekBar) {
         if(bluetoothAdapter.isEnabled() && outputStream != null) {
             controlValues[0] = sb_LEDLightControl.getProgress();
-            sendData();
+            sendControlValues();
         }
     }
 
@@ -260,6 +259,7 @@ public class MainActivity extends AppCompatActivity implements
         }
 
         setLightControl();
+        sendControlValues();
     }
     private void setTimerClock(boolean status) {
         LinearLayout container = findViewById(R.id.container_timerClock);
@@ -281,7 +281,7 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
-    public void timePickerDialog(View v){
+    public void  timePickerDialog(View v){
         Calendar calendar = Calendar.getInstance();
         switch (v.getId()) {
             case R.id.tv_lightOnTime:
@@ -294,7 +294,7 @@ public class MainActivity extends AppCompatActivity implements
                         String timeString = DateUtils.formatDateTime(MainActivity.this, timeCalendar.getTimeInMillis(), DateUtils.FORMAT_SHOW_TIME);
                         tv_lightOnTime.setText(timeString);
                         controlValues[1] = (double) i * 3600000 + i1 * 1000;
-                        sendData();
+                        sendControlValues();
                     }
                 }, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), true);
                 break;
@@ -309,7 +309,7 @@ public class MainActivity extends AppCompatActivity implements
                         String timeString = DateUtils.formatDateTime(MainActivity.this, timeCalendar.getTimeInMillis(), DateUtils.FORMAT_SHOW_TIME);
                         tv_lightOffTime.setText(timeString);
                         controlValues[2] = (double) i * 3600000 + i1 * 1000;
-                        sendData();
+                        sendControlValues();
                     }
                 }, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), true);
                 break;
@@ -326,7 +326,6 @@ public class MainActivity extends AppCompatActivity implements
         } else {
             controlValues[4] = 3;
         }
-        sendData();
     }
 
     private void toggleBluetooth(boolean b) {
@@ -527,7 +526,7 @@ public class MainActivity extends AppCompatActivity implements
             }
         }
     }
-    private void   sendData(){
+    private void   sendControlValues(){
         //send: xtime;ledValue;ledOnTime;ledOffTime;
         String sendString = "x" + getTime() + ";";
         for(int i=0; i<controlValues.length; i++){
