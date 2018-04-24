@@ -1,4 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout style="@style/Container" xmlns:android="http://schemas.android.com/apk/res/android" >
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" style="@style/Container"
+    android:paddingTop="@dimen/default_activity_padding">
+
+    <TextView style="@style/Label.Title" android:text="@string/label_fanState"
+        android:layout_gravity="center"/>
+
+    <RadioGroup xmlns:android="http://schemas.android.com/apk/res/android" android:orientation="horizontal"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_gravity="center" >
+
+        <RadioButton android:id="@+id/rbtn_fanoff" style="@style/radioButton"
+            android:text="@string/state_off" android:onClick="onRadioButtonClickedFan"
+            android:checked="true" />
+
+        <RadioButton android:id="@+id/rbtn_fanpartialload" style="@style/radioButton"
+            android:text="@string/state_partial_load" android:onClick="onRadioButtonClickedFan" />
+
+        <RadioButton android:id="@+id/rbtn_fanfullload" style="@style/radioButton"
+            android:text="@string/state_full_load" android:onClick="onRadioButtonClickedFan" />
+            
+    </RadioGroup>
+
+    <LinearLayout style="@style/Container.Horizontal" android:paddingTop="30dp">
+        <TextView style="@style/Label"
+            android:text="@string/label_airchange" android:layout_gravity="left"/>
+        
+        <Spinner android:id="@+id/spin_airchange" android:paddingStart="30dp"
+            android:layout_width="wrap_content"   android:layout_height="wrap_content" />
+    </LinearLayout>
 
 </LinearLayout>

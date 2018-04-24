@@ -18,6 +18,8 @@
     <string name="label_tabWatering">Watering</string>
     <string name="label_timerClock">Timer clock</string>
     <string name="label_lightingSensor">Lighting sensor</string>
+    <string name="label_fanState">Fan control state</string>
+    <string name="label_airchange">air changes per day:</string>
 
     <array name="array_label_identifiers">
         <item>@string/label_temperature</item>
@@ -26,6 +28,12 @@
         <item>@string/label_moisture</item>
         <item>@string/label_brightness</item>
     </array>
+
+    <!-- States -->
+    <string name="state_on">ON</string>
+    <string name="state_off">OFF</string>
+    <string name="state_full_load">100%</string>
+    <string name="state_partial_load">50%</string>
 
 
     <!-- Actions -->
@@ -63,6 +71,14 @@
         <item>%1$s %</item>
     </array>
 
+    <string-array name="array_airCchange">
+        <item>x0</item>
+        <item>x1</item>
+        <item>x2</item>
+        <item>x3</item>
+        <item>x4</item>
+        <item>x5</item>
+    </string-array>
 
 
 </resources>

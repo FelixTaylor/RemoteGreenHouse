@@ -15,17 +15,19 @@ import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.text.format.DateFormat;
 import android.text.format.DateUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.LinearLayout;
+import android.widget.RadioButton;
 import android.widget.SeekBar;
+import android.widget.Spinner;
 import android.widget.TabHost;
 import android.widget.TableLayout;
 import android.widget.TextView;
@@ -36,11 +38,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Date;
-import java.util.Locale;
 import java.util.Set;
 import java.util.TimeZone;
-import java.util.concurrent.TimeUnit;
 
 import static java.sql.Types.NULL;
 
@@ -254,6 +253,21 @@ public class MainActivity extends AppCompatActivity implements
             controlValues[0] = sb_LEDLightControl.getProgress();
             setLightControl();
             sendControlValues();
+        }
+    }
+    public void onRadioButtonClickedFan(View view){
+        boolean checked = ((RadioButton) view).isChecked();
+        switch(view.getId()){
+            case R.id.rbtn_fanoff:
+
+                break;
+            case R.id.rbtn_fanpartialload:
+
+                break;
+
+            case R.id.rbtn_fanfullload:
+
+                break;
         }
     }
 
@@ -590,6 +604,13 @@ public class MainActivity extends AppCompatActivity implements
             chb_lightingSensor.setChecked(false);
         }
 
+
+        //ventilation tab
+        Spinner spin_airChange = findViewById(R.id.spin_airchange);
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+                R.array.array_airCchange, android.R.layout.simple_spinner_item);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spin_airChange.setAdapter(adapter);
     }
 
     private final BroadcastReceiver mReceiver = new BroadcastReceiver() {

@@ -55,7 +55,10 @@
         <item name="android:textColor">@color/colorText</item>
     </style>
     <style name="Label.Title">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
         <item name="android:textSize">@dimen/text_title</item>
+        <item name="android:textColor">@color/colorText</item>
     </style>
 
     <!-- Buttons -->
@@ -73,6 +76,14 @@
         <item name="colorControlActivated">@color/sw_foreground</item>
         <item name="colorSwitchThumbNormal">@color/sw_Enable</item>
         <item name="android:colorForeground">@color/sw_Disable</item>
+    </style>
+
+    <style name="radioButton">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:textColor">@color/colorText</item>
+        <item name="android:textSize">@dimen/default_font_size</item>
+        <item name="android:gravity">center</item>
     </style>
 
 </resources>
