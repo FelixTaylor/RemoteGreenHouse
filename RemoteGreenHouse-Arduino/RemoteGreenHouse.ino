@@ -38,16 +38,24 @@ unsigned long curMillis;
 unsigned long prevMillis;
 unsigned long delayMillis;
 
-long controlValues[3];     // State variables: 
-                              //[0]: brightness of the LED Stripes  (0% - 100%)
-                              //[1]: time when light turns on       [ms] since 00:00:00
-                              //[2]: time whe light turns off       [ms] since 00:00:00
-int     i_fan_level;        // state of the fan               (0: off, 1: partial load, 2: full load)
-int     val_pressure;       // pressure value                 [Pa]
-int     val_brightness;     // brightness value               [lux]
-float   val_temperature;    // temperature value              [°C]
-float   val_humidity;       // humidity value                 [%]
-float   val_moisture;       // moisture value                 [%]
+long controlValues[5];     // State variables: 
+                              //[0]: brightness of the LED Stripes          (0% - 100%)
+                              //[1]: time when light turns on               [ms] since 00:00:00
+                              //[2]: time when light turns off              [ms] since 00:00:00
+                              //[3]: brightness when light turns on/off     [lux]
+                              //[4]: light control mode                     [0/1/2/3]
+                                // 4.0 : use time limits and brightness limits
+                                // 4.1 : ignore time limits and use brightness limits
+                                // 4.2 : use time limits and ignore brightness limits
+                                // 4.3 : ignore both limits. Light is always on
+                              
+float sensorValues[5];    // Sensor values:
+                              //[0]: Temperature    [°C]
+                              //[1]: humidity       [g/kg]
+                              //[2]: pressure       [Pa]
+                              //[3]: moisture       [g/kg]
+                              //[4]: brightness     [lux]
+
 String  readString;         // read data of the serial input
 String  limiterByte;        // limiter Byte for serial communication
 long    currentTime;        // current daytime in millis      [ms]
@@ -72,32 +80,27 @@ void setup() {
    * --------------------
    */
   //Barometer Setup()
-  if (!barometer.begin()) {
-  }
-  
+  barometer.begin();
   //lightSensor Setup()
   lightSensor.SetMode(Continuous_H_resolution_Mode);
+  
+  initializePins();
+  initializeVariables();
+  
   //Display Setup()
   display.setTextColor(WHITE);
   display.clearDisplay();
   displayStartMessage();
-
-  //Pinmode Setup and initial pin conditions
-  initializePins();
-
-  // Initialize the variables
-  initializeVariables();
-
 }
 
 void loop() {  
   // take sensor inputs
-  curMillis         = millis();
-  val_temperature   = dht_air.readTemperature();            // measure val_temperature
-  val_humidity      = getWaterContent();                    // measure val_humidity
-  val_pressure      = (barometer.readPressure()+1158)/100;  // measure val_pressure
-  val_moisture      = 0;                                    // until there is a moisture sensor
-  val_brightness    = lightSensor.GetLightIntensity();      // measure brightness
+  curMillis           = millis();
+  sensorValues[0]     = dht_air.readTemperature();            // measure val_temperature
+  sensorValues[1]     = getWaterContent();                    // measure val_humidity
+  sensorValues[2]     = (barometer.readPressure()+1158)/100;  // measure val_pressure
+  sensorValues[3]     = 0;                                    // until there is a moisture sensor
+  sensorValues[4]     = lightSensor.GetLightIntensity();      // measure brightness
   
   while(Serial.available()){    
     readString = readComPort();
@@ -107,11 +110,13 @@ void loop() {
     readString.remove(0,1);         // remove iCommand from readString
     readTime();                     // read time from readString and remove it incl limiter Byte ;
     if(iCommand == 119){            // w[119] get request from android device
-      String sSendString = val_temperature + limiterByte + val_humidity + limiterByte + val_pressure + limiterByte + val_moisture + limiterByte + val_brightness + limiterByte;
+      String sSendString = "";
+      for(int i = 0; i<(sizeof(sensorValues)/sizeof(long)); i++) {
+        sSendString += String(sensorValues[i]) + ";";
+      }
       Serial.println(sSendString);
     }
     else if(iCommand == 120){       //x[120] set request from android device
-      //incoming data: LED_level, led_on_time, led_off_time -- seperated by ;
       int limiterPosition = 0;
       for(int i=0; i<(sizeof(controlValues)/sizeof(long)); i++){
         for(int j=0; j<=readString.length(); j++){
@@ -130,13 +135,14 @@ void loop() {
     else if(iCommand == 121){     //y[121] get request for the controlValues
       String sSendString = "s";
       for(int i = 0; i<(sizeof(controlValues)/sizeof(long)); i++) {
-        sSendString += String(con trolValues[i]) + ";";
+        sSendString += String(controlValues[i]) + ";";
       }
       Serial.println(sSendString);
     }
     iCommand = 0;
     readString = "";
-  }  
+  }
+
   // display the current sensor values
   if(curMillis - prevMillis < delayMillis){
     displayPressBright();
@@ -158,11 +164,52 @@ void loop() {
 // -------------------------------------
 
 void updateLight(){
-  if(currentTime >= controlValues[1] && currentTime <= controlValues[2]){
-    setLEDlevel(controlValues[0]);
-  }
-  else{
-    setLEDlevel(0);
+  switch(controlValues[4]){
+    case 0:
+      if(currentTime >= controlValues[1] && currentTime <= controlValues[2]){
+        if(sensorValues[4] <= 0.95*controlValues[3]){      
+        //if(controlValues[3] = -1){
+          //int i = 255*(controlValues[3] - sensorValues[4])/(controlValues[3]-10);        
+          //setLEDlevel(i);
+        //}else{
+        setLEDlevel(controlValues[0]);
+        //}
+        }
+        else if(sensorValues[4] > 1.05*controlValues[3]){      
+          setLEDlevel(0);
+        }
+      }
+      else{
+        setLEDlevel(0);
+      }
+      break;
+      
+    case 1:
+      if(sensorValues[4] <= 0.95*controlValues[3]){      
+        //if(controlValues[3] = -1){
+          //int i = 255*(controlValues[3] - sensorValues[4])/(controlValues[3]-10);        
+          //setLEDlevel(i);
+        //}else{
+        setLEDlevel(controlValues[0]);
+        //}
+      }
+      else if(sensorValues[4] > 1.05*controlValues[3]){      
+        setLEDlevel(0);
+      }
+      break;
+      
+    case 2:
+      if(currentTime >= controlValues[1] && currentTime <= controlValues[2]){
+        setLEDlevel(controlValues[0]);
+      }
+      else{
+        setLEDlevel(0);
+      }
+      break;
+      
+    case 3:
+      setLEDlevel(controlValues[0]);
+      break;
   }
 }
 
@@ -199,7 +246,7 @@ void displayTempHum(){
   display.clearDisplay();
   display.setTextSize(1);
   display.setCursor(0,5);
-  String printString = "Temp: " + String(val_temperature) + " *C \n\nHum: "  + String(val_humidity) + " g/kg";
+  String printString = "Temp: " + String(sensorValues[0]) + " *C \n\nHum: "  + String(sensorValues[1]) + " g/kg";
   display.println(printString);
   display.display();
 }
@@ -208,7 +255,7 @@ void displayPressBright(){
   display.clearDisplay();
   display.setTextSize(1);
   display.setCursor(0,5);
-  String printString = "Bright: " + String(val_brightness) + " lux \n\nPres: " + String(val_pressure) + " hPa";
+  String printString = "Bright: " + String(sensorValues[4]) + " lux \n\nPres: " + String(sensorValues[2]) + " hPa";
   display.println(printString);
   display.display();
 }
@@ -228,7 +275,7 @@ float getWaterContent(){
 
 String readComPort(){
   while (Serial.available()) {
-    delay(2);
+    delay(10);
     if (Serial.available() >0) {
       char c = Serial.read();
       readString += c;
@@ -253,15 +300,14 @@ String convert_ASCII_Code(int mASCII){
 }
 
 void initializeVariables(){
-  controlValues[0]         = 0;
-  controlValues[1]         = 0;
-  controlValues[2]         = 24*3600000;
-  i_fan_level               = 0;
-  val_brightness            = 0;
-  val_pressure              = 0;
-  val_temperature           = 0; 
-  val_humidity              = 0;
-  val_moisture              = 0;
+  controlValues[0]          = 100;          // default brightnes
+  controlValues[1]          =  8*3600000;   // default turn on time  8 am
+  controlValues[2]          = 20*3600000;   // default turn off time 8 pm
+  controlValues[3]          = 400;          // default brightneslimit
+  controlValues[4]          = 3;            // default light mode (always on)
+  for(int i = 0; i<(sizeof(sensorValues)/sizeof(long)); i++){
+    sensorValues[i]        = 0;
+  }  
   limiterByte               = ";";      //ASCII 59
   readString                = "";
   prevMillis                = millis();

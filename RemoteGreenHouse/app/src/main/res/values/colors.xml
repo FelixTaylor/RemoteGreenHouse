@@ -13,6 +13,7 @@
     <color name="colorActivityBackground">#f1f1f1</color>
     <color name="colorTableLight">#e7e7e7</color>
     <color name="colorText">#131313</color>
+    <color name="colorDisabledText">#cacaca</color>
 
     <!--Switch Colors-->
     <color name="sw_Disable">#42221f1f</color>
